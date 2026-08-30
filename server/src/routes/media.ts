@@ -37,13 +37,13 @@ router.post('/', requireAuth, async (req, res) => {
   }
 
   try {
-    await pool.query(
+    const { rows } = await pool.query(
       `INSERT INTO media (kind, title, embed_url, s3_key, category, duration_seconds)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING ${MEDIA_COLUMNS}`,
       [kind, title, embedUrl ?? null, s3Key ?? null, category ?? null, durationSeconds ?? null],
     )
-    res.status(201).json({ kind, title, embedUrl, s3Key, category, durationSeconds })
+    res.status(201).json(rows[0])
   } catch (err) {
     console.error('[media:create]', err)
     res.status(500).json({ message: 'Could not create media item' })

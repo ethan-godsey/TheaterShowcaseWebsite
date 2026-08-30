@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Placeholder page. Deployed by copying to s3://ellie-website/index.html;
+       the next real deploy (aws s3 sync of dist/) replaces it with the site. -->
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f5ead9">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Karla:wght@400;700&display=swap">
+  <title>Ellie Evens</title>
+  <style>
+    * { margin: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh; display: grid; place-items: center;
+      background: #f5ead9; color: #5c4f43;
+      font-family: 'Karla', -apple-system, sans-serif;
+      text-align: center; padding: 2rem;
+    }
+    .sun { width: 88px; height: 88px; margin-inline: auto; }
+    h1 {
+      font-family: 'Fraunces', Georgia, serif; font-weight: 600;
+      font-size: clamp(2.4rem, 6vw, 4rem); color: #2a211b;
+      letter-spacing: -0.02em; margin-top: 1.2rem; line-height: 1;
+    }
+    p {
+      margin-top: 0.9rem; font-size: 1.05rem;
+    }
+    .tag {
+      margin-top: 1.6rem; display: inline-block;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.2em;
+      text-transform: uppercase; color: #3f646d;
+      border-top: 2px solid #2a211b; padding-top: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <svg class="sun" viewBox="0 0 120 120" aria-hidden="true">
+      <g stroke="#e59a24" stroke-width="4.5" stroke-linecap="round">
+        <line x1="60" y1="6" x2="60" y2="22"/><line x1="60" y1="98" x2="60" y2="114"/>
+        <line x1="6" y1="60" x2="22" y2="60"/><line x1="98" y1="60" x2="114" y2="60"/>
+        <line x1="21" y1="21" x2="33" y2="33"/><line x1="87" y1="87" x2="99" y2="99"/>
+        <line x1="21" y1="99" x2="33" y2="87"/><line x1="87" y1="33" x2="99" y2="21"/>
+      </g>
+      <circle cx="60" cy="60" r="27" fill="#e59a24"/>
+      <circle cx="60" cy="60" r="27" fill="none" stroke="#2a211b" stroke-width="2.5"/>
+    </svg>
+    <h1>Ellie Evens</h1>
+    <p>A new site is taking the stage soon.</p>
+    <span class="tag">Places, everyone</span>
+  </main>
+</body>
+</html>
