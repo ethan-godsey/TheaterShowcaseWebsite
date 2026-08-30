@@ -1,5 +1,5 @@
 <template>
-  <nav>
+  <nav aria-label="Primary" :class="{ 'is-scrolled': scrolled }">
     <a class="brand" href='#head'>Ellie Evens</a>
     <div class="links">
       <a href="#about">About</a>
@@ -8,10 +8,49 @@
       <a href="#shows">Shows</a>
       <a href="#contact">Contact</a>
     </div>
+    <!-- Reading-progress rule. Doubles as the nav's bottom border, so it
+         adds a moving element without adding a new one. -->
+    <div class="progress" :style="{ transform: `scaleX(${progress})` }" aria-hidden="true" />
   </nav>
 </template>
 
-<script setup>
+<script setup lang="ts">
+/* ── 1. Imports ─────────────────────────────────────────────────────── */
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+/* ── 5. Local state ─────────────────────────────────────────────────── */
+const progress = ref(0)
+const scrolled = ref(false)
+
+let frame = 0
+
+/* ── 8. Lifecycle ───────────────────────────────────────────────────── */
+onMounted(() => {
+  // passive: true tells the browser we never preventDefault, so it can keep
+  // scrolling on the compositor instead of waiting on this handler.
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
+  cancelAnimationFrame(frame)
+})
+
+/* ── 9. Handlers ────────────────────────────────────────────────────── */
+
+/* Scroll fires far more often than the screen repaints. Coalescing into one
+   rAF means we read layout once per frame instead of once per event. */
+function onScroll(): void {
+  cancelAnimationFrame(frame)
+  frame = requestAnimationFrame(measure)
+}
+
+function measure(): void {
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight
+  progress.value = scrollable > 0 ? Math.min(window.scrollY / scrollable, 1) : 0
+  scrolled.value = window.scrollY > 24
+}
 </script>
 
 <style scoped>
@@ -24,23 +63,43 @@ nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.2rem 3rem;
-  background: rgba(255, 255, 255, 0.95);
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
+  height: var(--nav-height);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--rule);
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+nav.is-scrolled {
+  box-shadow: 0 1px 18px -6px rgba(42, 33, 27, 0.35);
+}
+
+.progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--marigold);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  /* Transform-only, so this never triggers layout while scrolling. */
+  will-change: transform;
 }
 
 .brand {
   text-decoration: none;
-  font-family: 'Georgia', serif;
-  color: #2b8816;
+  font-family: var(--font-display);
+  font-variation-settings: var(--wonk-display);
+  font-weight: 600;
+  color: var(--ink);
   font-size: 1.3rem;
   letter-spacing: 0.05em;
 }
 
-.brand a:hover {
-    font-size: 1.5rem;
-    color: #1b8703; 
+.brand:hover {
+  color: var(--teal);
 }
 
 .links {
@@ -50,7 +109,7 @@ nav {
 
 .links a {
   text-decoration: none;
-  color: #2b8816;
+  color: var(--ink-mute);
   font-size: 0.85rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -58,6 +117,20 @@ nav {
 }
 
 .links a:hover {
-  color: #999;
+  color: var(--teal);
+}
+
+/* On phones the six items can't fit at full spacing. A horizontally
+   scrollable row keeps every anchor reachable without a hamburger. */
+@media (max-width: 720px) {
+  nav { gap: var(--space-sm); }
+  .brand { flex: none; }
+  .links {
+    gap: 1.1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .links::-webkit-scrollbar { display: none; }
+  .links a { white-space: nowrap; }
 }
 </style>

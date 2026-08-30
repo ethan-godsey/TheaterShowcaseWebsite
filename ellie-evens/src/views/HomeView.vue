@@ -1,40 +1,24 @@
 <template>
-  <main>
-    <h1>{{ name }}</h1>
-    <p>{{ tagline }}</p>
-    <div class="headshot">
-      <img src = "headShotImage">
-    </div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <NavBar />
+  <main id="main">
+    <HeadSection />
+    <AboutSection />
+    <GallerySection />
+    <ReelSection />
+    <ShowsSection />
+    <ContactForm />
   </main>
+  <SiteFooter />
 </template>
 
-<script setup>
-import { ref } from 'vue'
-import headShotImage from '@/assets/logo.svg'
-const name = ref('Ellie Evens')
-const tagline = ref('Actor · Singer · Dancer')
+<script setup lang="ts">
+import NavBar from '@/components/NavBar.vue'
+import HeadSection from '@/components/HeadSection.vue'
+import AboutSection from '@/components/AboutSection.vue'
+import GallerySection from '@/components/GallerySection.vue'
+import ReelSection from '@/components/ReelSection.vue'
+import ShowsSection from '@/components/ShowsSection.vue'
+import ContactForm from '@/components/ContactForm.vue'
+import SiteFooter from '@/components/SiteFooter.vue'
 </script>
-
-<style scoped>
-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  font-family: 'Georgia', serif;
-}
-
-h1 {
-  font-size: 3rem;
-  margin: 0;
-}
-
-p {
-  font-size: 1.2rem;
-  color: #666;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  margin-top: 0.5rem;
-}
-</style>

@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build",
     "preview": "vite preview",
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",
@@ -14,11 +16,16 @@
   },
   "dependencies": {
     "vue": "^3.5.32",
-    "vue-router": "^5.0.4"
+    "vue-router": "^5.0.4",
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tsconfig/node22": "^22.0.6",
+    "@types/node": "^26.3.0",
     "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/eslint-config-typescript": "^14.9.0",
+    "@vue/tsconfig": "^0.9.1",
     "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-oxlint": "~1.60.0",
@@ -27,8 +34,10 @@
     "npm-run-all2": "^8.0.4",
     "oxlint": "~1.60.0",
     "prettier": "3.8.3",
+    "typescript": "~5.9",
     "vite": "^8.0.8",
-    "vite-plugin-vue-devtools": "^8.1.1"
+    "vite-plugin-vue-devtools": "^8.1.1",
+    "vue-tsc": "^3.3.11"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
