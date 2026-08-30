@@ -1,44 +1,16 @@
-# ellie-evens
+This repository was made for Ellie Evens, a musical theater student at 
+Illinois Wesleyan University.
 
-This template should help get you started developing with Vue 3 in Vite.
+It was made utilizing a Vue 2 as well as Vuex rather than Pinia, something I am solidifying in my internship work. The server code is written in Typescript with the Node.js framework. 
 
-## Recommended IDE Setup
+I have used a slew of AWS tools to learn about production deployment outside of the CI/CD pipeline I have been exposed to in the corporate environment I work in. 
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+Among these managed services are Route 53, providing DNS from my Squarespace domain to a CloudFront domain. That CloudFront server uses Certificate Manager for TLS encryption.
 
-## Recommended Browser Setup
+ The authorization is dealt with a by Cognito Pool, allowing for admin priviliges that allow easy customization by Ellie. Files are stored in an S3 bucket, and the database for text based media is hosted on Neon in a Postgres DB.
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+ Most of these decisions were made in conjunction with what I know, with some preliminary guidance by Claude Code, of course followed by online research via the browser. 
 
-## Customize configuration
+ Notably, development was accelerated by AI, but I explicitly have been practicing the patterns seen in the repository rather than simply letting AI drive so that I can understand and customize the output to Ellie's liking.
 
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+ Features I am still looking to implement are AWS SES for contact forms to go straight to Ellie's email, audition tapes being bundeled to a custom URL for her to submit, and video hosting via Vimeo for her reels rather than trying to store those in a bucket.

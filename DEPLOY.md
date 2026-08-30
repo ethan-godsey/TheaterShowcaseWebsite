@@ -5,8 +5,8 @@ Two-phase launch: **Phase 1** is the public site (no auth needed, ships first);
 
 ## Phase 0 — hygiene (do regardless)
 
-- [ ] **Commit the working tree** — ~2 weeks of work is currently uncommitted
-- [ ] **Resolve the announced planted bug** in the server write routes
+- [X] **Commit the working tree** — ~2 weeks of work is currently uncommitted
+- [X] **Resolve the announced planted bug** in the server write routes
       (it's in a success response body; wrong in a way status codes don't show)
 - [ ] **Flip `requireAuth` to fail-closed**: reject 401 unless
       `AUTH_DEV_BYPASS=true`, so dev works but early-deployed writes are locked
@@ -23,18 +23,15 @@ Two-phase launch: **Phase 1** is the public site (no auth needed, ships first);
 - [ ] Ellie's sign-off on the design
 
 ### Infra (Ethan)
-- [x] Buy domain (registered at Squarespace, 2026-08-28)
-- [x] Route 53 hosted zone; point Squarespace NS records at it (registration
-      stays at Squarespace — Squarespace DNS can't ALIAS the apex to CloudFront)
-- [x] ACM cert **in us-east-1** for apex + www, DNS-validated via Route 53
-      (CloudFront requirement, regardless of stack region)
-- [x] Site bucket (`ellie-website`): Block Public Access ON, static website hosting OFF,
+- [X] Buy domain (first — DNS + cert validation have latency)
+- [X] ACM cert **in us-east-1** (CloudFront requirement, regardless of stack region)
+- [X] Site bucket: Block Public Access ON, static website hosting OFF,
       versioning on, SSE-S3
-- [x] CloudFront: OAC to site bucket; bucket policy scoped to the
+- [X] CloudFront: OAC to site bucket; bucket policy scoped to the
       distribution ARN (`AWS:SourceArn` condition)
-- [x] CloudFront error responses: 403 AND 404 → `/index.html` with code 200
+- [X] CloudFront error responses: 403 AND 404 → `/index.html` with code 200
       (vue-router refresh breaks without this)
-- [x] CloudFront: compress on; long TTL for `/assets/*`; no-cache for `index.html`
+- [X] CloudFront: compress on; long TTL for `/assets/*`; no-cache for `index.html`
 - [ ] Host Express (App Runner = low-friction) with env: `DATABASE_URL`
       (Neon **pooled** string), later `ASSET_BASE_URL`
 - [ ] `/api/*` behavior on the same distribution — caching disabled, all
@@ -44,13 +41,6 @@ Two-phase launch: **Phase 1** is the public site (no auth needed, ships first);
 - [ ] Tighten or remove `cors()` for prod
 - [ ] `og:image` → absolute URL once domain exists (scrapers ignore relative)
 - [ ] Prod smoke test: deep-link refresh, contact form end to end, on a phone
-
-**LIVE 2026-08-29**: currently serving the **under-construction placeholder**
-(`under-construction.html` copied over the bucket's index.html). The real site
-goes live via a normal deploy: `npm run build` + the three-tier sync — the
-sync's index.html upload overwrites the placeholder. Site infra proven (tiered cache
-headers: assets immutable-1yr, index.html no-cache). Shows section shows its
-error state until the API origin exists — expected.
 
 ## Phase 2 — admin launch
 
@@ -65,7 +55,7 @@ error state until the API origin exists — expected.
 - [ ] SES: verify Ellie's address (sandbox is fine — she's the only recipient),
       `From:` own domain + `Reply-To:` visitor, send as side effect of the
       existing contact insert
-
+- [ ] Curtain opening start animation (look at CodePen and Josh Comaneau)
 ## Not blocking anything
 
 - Git history purge (`git filter-repo`, 43 MB of images) — only if repo goes
