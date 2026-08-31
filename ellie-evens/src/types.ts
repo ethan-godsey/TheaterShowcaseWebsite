@@ -1,4 +1,5 @@
 /** Domain shapes. These mirror the Express API's JSON contract exactly. */
+import { Status } from './store/requestState'
 
 export interface Show {
   id: string
@@ -35,3 +36,29 @@ export interface PresignResponse {
   uploadUrl: string
   item: Photo
 }
+
+// invariant: shared stuff between media in db (sum type)
+interface MediaBase {                     
+  id: string
+  title: string
+  category: string | null
+  durationSeconds: number | null
+  sortOrder: number
+}
+
+// variant for reel. Not hosted in a bucket (too large)
+export interface Reel extends MediaBase {
+  kind: 'reel'                             
+  embedUrl: string                         
+  s3Key: null
+}
+
+// variant for a song. Hosted in a bucket, not externally (no embedUrl)
+export interface Song extends MediaBase {
+  kind: 'song'
+  embedUrl: null
+  s3Key: string                            
+}
+
+// actual sum type
+export type MediaItem = Reel | Song        

@@ -13,14 +13,19 @@ Two-phase launch: **Phase 1** is the public site (no auth needed, ships first);
 
 ## Phase 1 — public launch
 
-### Content (Ellie — critical path)
+### Content (COVERT — site is a birthday surprise; do NOT ask Ellie directly)
 - [ ] **Real credits in the DB** — the 4 seeded shows are FICTIONAL and must
-      never go live (delete seed rows, insert real ones)
-- [ ] Bio (2 paragraphs, third person)
-- [ ] Low end of vocal range · dance level/styles · special skills · eye color
-- [ ] Résumé PDF → `ellie-evens/public/ellie-evens-resume.pdf`
-- [ ] Reel link if one exists (the empty state is fine if not)
-- [ ] Ellie's sign-off on the design
+      never go live. Ethan enters her real credits (playbills, season
+      archives, Instagram for venues/dates)
+- [ ] Bio: Ethan drafts it (2 paragraphs, third person); she edits it in her
+      own admin after the reveal
+- [ ] Stats ship with graceful gaps: "Up to G6", Dance row hidden — fine
+- [ ] Résumé PDF if discreetly obtainable; else hide the download button
+      (`v-if`) and add post-reveal
+- [ ] Reel: empty state was built for this
+- [ ] Design look-over by a trusted confidant, not Ellie
+- [ ] **Reveal plan**: curtain-open animation on first load; hand her the
+      admin login as part of the gift
 
 ### Infra (Ethan)
 - [X] Buy domain (first — DNS + cert validation have latency)
@@ -32,7 +37,7 @@ Two-phase launch: **Phase 1** is the public site (no auth needed, ships first);
 - [X] CloudFront error responses: 403 AND 404 → `/index.html` with code 200
       (vue-router refresh breaks without this)
 - [X] CloudFront: compress on; long TTL for `/assets/*`; no-cache for `index.html`
-- [ ] Host Express (App Runner = low-friction) with env: `DATABASE_URL`
+- [X] Host Express (App Runner = low-friction) with env: `DATABASE_URL`
       (Neon **pooled** string), later `ASSET_BASE_URL`
 - [ ] `/api/*` behavior on the same distribution — caching disabled, all
       methods + headers forwarded (single origin ⇒ no CORS in prod)
@@ -56,6 +61,7 @@ Two-phase launch: **Phase 1** is the public site (no auth needed, ships first);
       `From:` own domain + `Reply-To:` visitor, send as side effect of the
       existing contact insert
 - [ ] Curtain opening start animation (look at CodePen and Josh Comaneau)
+- [ ] Clean Git Repo for public
 ## Not blocking anything
 
 - Git history purge (`git filter-repo`, 43 MB of images) — only if repo goes

@@ -39,7 +39,7 @@
 /* ── 5. Local state ─────────────────────────────────────────────────────
    Hardcoded until the profile table exists. Swap for a store getter later —
    the template won't need to change. */
-const headline = 'Actor, singer, and mover based in the DMV.'
+const headline = 'Singer, Actor, and Dancer trained at Illinois Wesleyan University.'
 
 // TODO(content): real bio from Ellie.
 const bio = [

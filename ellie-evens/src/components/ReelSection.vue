@@ -9,20 +9,20 @@
         today in shape, tomorrow in fact. When the store lands, `items` becomes
         a getter and nothing in this template changes.
       -->
-      <div v-if="items.length" class="reels">
-        <figure v-for="item in items" :key="item.id" class="reel">
+      <div v-if="reels.length" class="reels">
+        <figure v-for="reel in reels" :key="reel.id" class="reel">
           <div class="reel__frame">
             <iframe
-              :src="item.embedUrl"
-              :title="item.title"
+              :src="reel.embedUrl"
+              :title="reel.title"
               loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
               allowfullscreen
             />
           </div>
           <figcaption class="reel__caption">
-            <span class="reel__title">{{ item.title }}</span>
-            <span v-if="item.category" class="reel__tag">{{ item.category }}</span>
+            <span class="reel__title">{{ reel.title }}</span>
+            <span v-if="reel.category" class="reel__tag">{{ reel.category }}</span>
           </figcaption>
         </figure>
       </div>
@@ -44,18 +44,20 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, computed } from 'vue'
+import { useStore } from '@/store'          // your typed one, not vuex's
+
 /* ── 5. Local state ─────────────────────────────────────────────────────
    Empty until Ellie uploads through the admin. Shape matches the planned
    `media` table: reels store an embed URL (Vimeo/YouTube host the video —
    we never do), song cuts will store an S3 key. */
-interface MediaItem {
-  id: string
-  title: string
-  embedUrl: string
-  category?: string
-}
 
-const items: MediaItem[] = []
+const store = useStore()
+
+onMounted(() => store.dispatch('media/fetch'))
+
+const reels = computed(() => store.getters['media/reels'])
+
 </script>
 
 <style scoped>

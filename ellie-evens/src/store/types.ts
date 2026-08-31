@@ -2,6 +2,7 @@ import type { GalleryState } from './modules/gallery'
 import type { ShowsState } from './modules/shows'
 import type { ContactState } from './modules/contact'
 import type { AuthState } from './modules/auth'
+import type { MediaState } from './modules/media'
 
 /**
  * The shape of `store.state`. Lives in its own file so modules can import it
@@ -13,4 +14,5 @@ export interface RootState {
   shows: ShowsState
   contact: ContactState
   auth: AuthState
+  media: MediaState
 }

@@ -9,10 +9,12 @@ const MEDIA_COLUMNS = `id, kind, title,
   embed_url AS "embedUrl", s3_key AS "s3Key",
   category, duration_seconds AS "durationSeconds", sort_order AS "sortOrder"`
 
+// when server recieves get
 router.get('/', async (_req, res) => {
   try {
+    // ask db for all rows in media table
     const { rows } = await pool.query(
-      `SELECT ${MEDIA_COLUMNS} FROM media ORDER BY kind, sort_order, created_at`,
+      `SELECT ${MEDIA_COLUMNS} FROM media ORDER BY sort_order, created_at`,
     )
     res.json(rows)
   } catch (err) {

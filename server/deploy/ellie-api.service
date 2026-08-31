@@ -1,0 +1,32 @@
+# systemd unit for the Ellie Evens API.
+# Install:  sudo cp deploy/ellie-api.service /etc/systemd/system/
+#           sudo systemctl daemon-reload && sudo systemctl enable --now ellie-api
+#
+# systemd is what replaces the managed platform: it starts the process on boot,
+# restarts it if it crashes, and captures its logs. On EC2 nothing else will.
+
+[Unit]
+Description=Ellie Evens API (Express)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/app/MTShowcaseWebsite/server
+
+# Secrets live here, root-owned and chmod 600 — never in git, never in the unit.
+EnvironmentFile=/etc/ellie-api.env
+
+ExecStart=/usr/bin/node dist/index.js
+
+# Always come back up: crash, OOM, or reboot.
+Restart=always
+RestartSec=5
+
+# Logs go to journald: `journalctl -u ellie-api -f`
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

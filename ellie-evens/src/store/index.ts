@@ -5,6 +5,7 @@ import gallery from './modules/gallery'
 import shows from './modules/shows'
 import contact from './modules/contact'
 import auth from './modules/auth'
+import media from './modules/media'
 import type { RootState } from './types'
 
 export type { RootState }
@@ -15,7 +16,7 @@ export type { RootState }
  * not two (public grid + admin uploader) — both look at the same photos.
  */
 const store = createStore<RootState>({
-  modules: { gallery, shows, contact, auth },
+  modules: { gallery, shows, contact, auth, media },
 
   // Throws the moment state is written outside a mutation. Dev only: the deep
   // watcher backing it is genuinely expensive on large state.
