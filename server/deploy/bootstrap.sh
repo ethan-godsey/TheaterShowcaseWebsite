@@ -33,4 +33,4 @@ echo "  (read-only is correct; the box never pushes)"
 echo
 cat ~/.ssh/deploy_key.pub
 echo "=================================================================="
-echo "Then run: bash ~/app/MTShowcaseWebsite/server/deploy/install.sh"
+echo "Then run: bash ~/app/server/deploy/install.sh"

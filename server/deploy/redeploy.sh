@@ -3,7 +3,7 @@
 set -euo pipefail
 cd /home/ec2-user/app
 git pull --ff-only
-cd MTShowcaseWebsite/server
+cd server
 npm ci
 npm run build
 sudo systemctl restart ellie-api

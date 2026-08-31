@@ -11,13 +11,14 @@ if [ ! -d "$APP_DIR/.git" ]; then
   git clone "$REPO" "$APP_DIR"
 fi
 
-cd "$APP_DIR/MTShowcaseWebsite/server"
+cd "$APP_DIR/server"
 npm ci
 npm run build
 
 if [ ! -f /etc/ellie-api.env ]; then
   echo
-  echo "!! Create /etc/ellie-api.env before starting. Run:"
+  echo "!! Build succeeded. One thing left before the service can start."
+  echo "   Create /etc/ellie-api.env, then re-run this script:"
   echo "     sudo nano /etc/ellie-api.env"
   echo "   Contents (no quotes, no 'export'):"
   echo "     DATABASE_URL=<your Neon POOLED connection string>"
