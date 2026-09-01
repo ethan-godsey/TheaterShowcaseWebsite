@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 
+import { requireAuth } from './middleware/require-auth'
 import showsRouter from './routes/shows'
 import photosRouter from './routes/photos'
 import mediaRouter from './routes/media'
@@ -26,6 +27,12 @@ app.use(express.json())
 // Liveness probe for the platform's health checks — cheap, no DB touch.
 app.get('/health', (_req, res) => {
   res.json({ ok: true })
+})
+
+// Cheap authenticated echo — the fastest way to prove a token end to end
+// without creating a row you then have to clean up.
+app.get('/api/auth/me', requireAuth, (_req, res) => {
+  res.json(res.locals.auth)
 })
 
 app.use('/api/shows', showsRouter)
