@@ -1,3 +1,8 @@
+// MUST be first: modules below read process.env in their bodies, and imports
+// evaluate top-to-bottom. Loading dotenv anywhere later means whichever module
+// happens to be imported first sees an empty environment.
+import 'dotenv/config'
+
 import express from 'express'
 import cors from 'cors'
 
