@@ -16,11 +16,14 @@ import {
 //   import { api } from '@/api/client'
 //   import { runRequest } from '../requestState'
 
+/** A show being edited: no id yet when it's new. */
+export type ShowDraft = Omit<Show, 'id'> & { id?: string }
+
 export interface ShowsState {
   items: Show[]
   /** null = never fetched. Used to skip redundant requests. */
   loadedAt: number | null
-  requests: Requests<'fetch' | 'save'>
+  requests: Requests<'fetch' | 'save' | 'remove'>
 }
 
 const shows: Module<ShowsState, RootState> = {
@@ -29,19 +32,29 @@ const shows: Module<ShowsState, RootState> = {
   state: () => ({
     items: [],
     loadedAt: null,
-    requests: createRequests('fetch', 'save'),
+    requests: createRequests('fetch', 'save', 'remove'),
   }),
 
   mutations: {
     ...requestMutations,
 
-    SET_ITEMS(state: ShowsState, items: Show[]){
+    SET_ITEMS(state, items: Show[]) {
       state.items = items
       state.loadedAt = Date.now()
-    }
-    // TODO UPSERT_ITEM(state, show: Show)
-    //   Insert when show.id isn't present, replace it when it is.
-    //   In-place mutation is tempting here. Resist it.
+    },
+
+    // Insert when the id is new, replace when it exists. Builds a new array
+    // rather than splicing, so the change is a reassignment Vue can't miss.
+    UPSERT_ITEM(state, show: Show) {
+      const exists = state.items.some((s) => s.id === show.id)
+      state.items = exists
+        ? state.items.map((s) => (s.id === show.id ? show : s))
+        : [...state.items, show]
+    },
+
+    REMOVE_ITEM(state, id: string) {
+      state.items = state.items.filter((s) => s.id !== id)
+    },
   },
 
   getters: {
@@ -58,11 +71,12 @@ const shows: Module<ShowsState, RootState> = {
 
     // TODO past(state): Show[]      -> date < now, most recent first
     //   Remember what .sort() does to the array you call it on.
-    past(state: ShowsState) {
+    past(state) {
       const now = Date.now()
       return state.items
         .filter((show) => new Date(show.date).getTime() < now)
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        // b - a, not a - b: most recent credit first.
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     },
     // TODO byId(state)  -> returns a FUNCTION: (id: string) => Show | null
     //   Its return type differs from the others. Work out why before writing it.
@@ -78,13 +92,28 @@ const shows: Module<ShowsState, RootState> = {
       })
     },
  
-    //   Skip the network when loadedAt is set and force isn't true.
-    //   Wrap in runRequest(commit, 'fetch', async () => { ... }).
-    //   api.get<Show[]>('/shows')
+    /**
+     * Create when there's no id, update when there is.
+     * Commits the RESPONSE, never the argument — the server assigns the id
+     * and any defaults, so the row it returns is the only accurate one.
+     */
+    async save({ commit }, show: ShowDraft) {
+      return runRequest(commit, 'save', async () => {
+        const saved = show.id
+          ? await api.put<Show>(`/shows/${show.id}`, show)
+          : await api.post<Show>('/shows', show)
+        commit('UPSERT_ITEM', saved)
+        return saved
+      })
+    },
 
-    // TODO save({ commit }, show: Show | Omit<Show, 'id'>)
-    //   POST when there's no id, PUT /shows/:id when there is.
-    //   Commit the RESPONSE, not the argument — the server assigns the id.
+    async remove({ commit }, id: string) {
+      return runRequest(commit, 'remove', async () => {
+        await api.delete<void>(`/shows/${id}`)
+        commit('REMOVE_ITEM', id)
+        return true
+      })
+    },
   },
 }
 

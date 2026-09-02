@@ -25,10 +25,17 @@ export interface ContactPayload {
   message: string
 }
 
+/** What we keep after a successful Cognito login. */
 export interface Session {
-  token: string
-  /** ISO 8601 timestamp. */
-  expiresAt: string
+  /** Sent to our API as `Authorization: Bearer`. */
+  accessToken: string
+  /** Identity claims for display only — never sent to the API. */
+  idToken: string
+  /** Used to mint a new access token without a fresh login. */
+  refreshToken: string
+  /** Epoch milliseconds. */
+  expiresAt: number
+  username: string
 }
 
 /** Returned by POST /gallery/presign. */
@@ -62,3 +69,15 @@ export interface Song extends MediaBase {
 
 // actual sum type
 export type MediaItem = Reel | Song        
+
+/** The single profile row — bio and the stats casting scans for. */
+export interface Profile {
+  bio: string
+  headline: string
+  voiceType: string
+  rangeLow: string
+  rangeHigh: string
+  heightInches: number | null
+  headshotKey: string | null
+  updatedAt?: string
+}

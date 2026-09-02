@@ -5,14 +5,13 @@
         <h1 class="hero__name" v-reveal.mask>Ellie Evens</h1>
 
         <p class="hero__billing" v-reveal="{ delay: 250 }">
-          Legit soprano <span class="hero__dot">&middot;</span>
+          Soprano <span class="hero__dot">&middot;</span>
           Improv <span class="hero__dot">&middot;</span>
-          Physical comedy
+          Acting
         </p>
 
         <p class="hero__lede" v-reveal="{ delay: 350 }">
-          Musical theatre performer working from Millay to Bikini Bottom &mdash;
-          and a G6 through all of it.
+          Musical Theater Student studying at Illinois Wesleyan, from Lincolnwood, IL
         </p>
 
         <div class="hero__actions" v-reveal="{ delay: 450 }">
@@ -54,7 +53,8 @@
 
 <script setup lang="ts">
 /* ── 1. Imports ─────────────────────────────────────────────────────── */
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed } from 'vue'
+import { useCarousel } from '@/composables/useCarousel'
 import headShot1 from '@/assets/opt/HeadShot1.jpg'
 import headShot2 from '@/assets/opt/HeadShot2.jpg'
 
@@ -62,43 +62,14 @@ import headShot2 from '@/assets/opt/HeadShot2.jpg'
    HeadShot1 first — it's the one Ellie picked, and the palette is built
    from it. TODO: move to S3 + the gallery store once uploads exist. */
 const photos = [headShot1, headShot2]
-const current = ref(0)
 
-const INTERVAL_MS = 7000
-let timer: ReturnType<typeof setInterval> | null = null
-
-/* ── 7. Watchers ────────────────────────────────────────────────────────
-   The timer restarts whenever `current` changes — including a manual click.
-   Without this, tapping a dot leaves the original interval running and the
-   slide can flip 200ms later, which feels broken. A side effect in response
-   to a state change: exactly what watch is for, and what computed can't do. */
-watch(current, restartTimer)
-
-/* ── 8. Lifecycle ───────────────────────────────────────────────────── */
-onMounted(restartTimer)
-onBeforeUnmount(stopTimer)
-
-/* ── 9. Handlers ────────────────────────────────────────────────────── */
-function stopTimer(): void {
-  if (timer !== null) clearInterval(timer)
-  timer = null
-}
-
-function restartTimer(): void {
-  stopTimer()
-  if (photos.length < 2) return
-  // Don't auto-advance for anyone who's asked for less motion.
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  timer = setInterval(next, INTERVAL_MS)
-}
-
-function next(): void {
-  current.value = (current.value + 1) % photos.length
-}
-
-function goTo(index: number): void {
-  current.value = index
-}
+/* ── 6. Composables ─────────────────────────────────────────────────────
+   Index, wraparound, and the autoplay timer all live in useCarousel. The
+   crossfade markup below is what's specific to this component. */
+const { current, goTo } = useCarousel(
+  computed(() => photos.length),
+  { autoplayMs: 7000 },
+)
 </script>
 
 <style scoped>

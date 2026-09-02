@@ -14,8 +14,7 @@ app.use(store, key)
 app.use(router)
 app.directive('reveal', reveal)
 
-// TODO(auth): re-enable once auth.ts implements restore(). Dispatching an
-// action that doesn't exist yet logs a red console error on every load.
-// void store.dispatch('auth/restore')
+// Re-attach a surviving session before the first navigation guard runs.
+void store.dispatch('auth/restore')
 
 app.mount('#app')

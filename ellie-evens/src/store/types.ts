@@ -2,6 +2,7 @@ import type { GalleryState } from './modules/gallery'
 import type { ShowsState } from './modules/shows'
 import type { ContactState } from './modules/contact'
 import type { AuthState } from './modules/auth'
+import type { ProfileState } from './modules/profile'
 import type { MediaState } from './modules/media'
 
 /**
@@ -14,5 +15,6 @@ export interface RootState {
   shows: ShowsState
   contact: ContactState
   auth: AuthState
+  profile: ProfileState
   media: MediaState
 }

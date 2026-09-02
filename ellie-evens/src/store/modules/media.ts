@@ -16,11 +16,14 @@ import {
 //   import type { PresignResponse } from '@/types'
 //   import { runRequest } from '../requestState'
 
+/** A media item being edited: no id yet when it's new. */
+export type MediaDraft = Omit<MediaItem, 'id'> & { id?: string }
+
 export interface MediaState {
   items: MediaItem[]
   loadedAt: number | null
   activeTag: string | null
-  requests: Requests<'fetch' | 'upload' | 'remove'>
+  requests: Requests<'fetch' | 'save' | 'remove'>
 }
 
 const media: Module<MediaState, RootState> = {
@@ -30,7 +33,7 @@ const media: Module<MediaState, RootState> = {
     items: [],
     loadedAt: null,
     activeTag: null,
-    requests: createRequests('fetch', 'upload', 'remove'),
+    requests: createRequests('fetch', 'save', 'remove'),
   }),
 
   mutations: {
@@ -39,10 +42,18 @@ const media: Module<MediaState, RootState> = {
       state.activeTag = null
       state.loadedAt = Date.now()
       state.items = items
-    }
-    
-    // TODO SET_ITEMS / ADD_ITEM / REMOVE_ITEM / SET_ACTIVE_TAG
-    //   REMOVE_ITEM takes a Photo['key'], not an index.
+    },
+
+    UPSERT_ITEM(state, item: MediaItem) {
+      const exists = state.items.some((i) => i.id === item.id)
+      state.items = exists
+        ? state.items.map((i) => (i.id === item.id ? item : i))
+        : [...state.items, item]
+    },
+
+    REMOVE_ITEM(state, id: string) {
+      state.items = state.items.filter((i) => i.id !== id)
+    },
   },
 
   getters: {
@@ -68,16 +79,24 @@ const media: Module<MediaState, RootState> = {
   })
 },
 
-    // TODO fetch  -> api.get<Photo[]>('/gallery'), same skip-if-loaded shape
+    /** Create when there's no id, update when there is. Commits the response. */
+    async save({ commit }, item: MediaDraft) {
+      return runRequest(commit, 'save', async () => {
+        const saved = item.id
+          ? await api.put<MediaItem>(`/media/${item.id}`, item)
+          : await api.post<MediaItem>('/media', item)
+        commit('UPSERT_ITEM', saved)
+        return saved
+      })
+    },
 
-    // TODO upload({ commit }, payload: { file: File; caption?: string; tags?: string[] })
-    //   Two steps:
-    //     1. api.post<PresignResponse>('/gallery/presign', {...})
-    //     2. PUT the file DIRECTLY to uploadUrl with plain fetch(), not api.*
-    //   Why must the file not pass through the Express server? Two reasons.
-
-    // TODO remove({ commit }, key: string)
-    // TODO filterByTag({ commit }, tag: string | null)
+    async remove({ commit }, id: string) {
+      return runRequest(commit, 'remove', async () => {
+        await api.delete<void>(`/media/${id}`)
+        commit('REMOVE_ITEM', id)
+        return true
+      })
+    },
   },
 }
 

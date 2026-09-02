@@ -36,7 +36,7 @@ patterns myself rather than have them generated for me.
 ## Architecture
 
 ```
-                      elenaevens.com  (domain not purchased yet)
+                        ellieevens.com  (LIVE)
                               │
                         ┌─────▼──────┐
                         │ CloudFront │
@@ -45,10 +45,10 @@ patterns myself rather than have them generated for me.
                /api/*                    /*
                   │                       │
         ┌─────────▼─────────┐   ┌─────────▼─────────┐
-        │ Express           │   │ S3 (private)      │
-        │ (Lambda/AppRunner)│   │ built Vue app     │
-        └────┬─────────┬────┘   │ served via OAC    │
-             │         │        └───────────────────┘
+        │ Express on EC2    │   │ S3 (private)      │
+        │ t4g.micro :3000   │   │ ellie-website     │
+        │ systemd, us-east-1│   │ served via OAC    │
+        └────┬─────────┬────┘   └───────────────────┘
       ┌──────▼───┐ ┌───▼────┐
       │ Postgres │ │ S3     │   media bucket
       │ metadata │ │ bytes  │   (presigned PUT from browser)
@@ -138,9 +138,19 @@ profile            single row: bio, height_inches, vocal_range_low/high,
 - `store/modules/gallery.ts` (9 TODOs)
 - `store/modules/auth.ts` (7 TODOs)
 
+**Live in production (2026-08-31):**
+- `ellieevens.com` — Route 53 -> CloudFront -> S3 (`ellie-website`) via OAC,
+  ACM cert in us-east-1, currently serving the under-construction placeholder
+- `ellieevens.com/api/*` -> CloudFront second origin -> EC2 `i-0aa6da5a1bebff5da`
+  (t4g.micro, us-east-1c, `54.196.138.47`) running Express under systemd
+  (`ellie-api.service`), port 3000, reachable ONLY from the CloudFront
+  origin-facing prefix list
+- Reads work end to end; writes return 401 (requireAuth fail-closed, no
+  AUTH_DEV_BYPASS in the production env file)
+- Deploy: `server/deploy/redeploy.sh` on the box (git pull, build, restart)
+
 **Not started:**
-- Photo upload flow (presign -> S3 -> confirm) — built together with auth
-- AWS infra (S3 bucket created; CloudFront, Cognito, SES not configured)
+- Cognito (real requireAuth), admin UI, presign photo upload, SES
 - AboutSection, ReelSection, ShowsSection, ContactForm are 4-line stubs
 - Admin area
 - Audition share links (see Planned features)

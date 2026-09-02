@@ -15,7 +15,7 @@
         Stats panel. Casting directors scan for exactly these fields, and most
         performer sites bury or omit them. Keep it above the fold on mobile.
       -->
-      <aside class="stats" aria-label="Performer details">
+      <aside v-if="stats.length" class="stats" aria-label="Performer details">
         <dl v-reveal.stagger>
           <div v-for="stat in stats" :key="stat.label" class="stats__row">
             <dt>{{ stat.label }}</dt>
@@ -34,34 +34,51 @@
 
 <script setup lang="ts">
 /* ── 1. Imports ─────────────────────────────────────────────────────── */
-// none yet
+import { computed, onMounted } from 'vue'
+import { useStore } from '@/store'
+
+/* ── 4. Store ───────────────────────────────────────────────────────── */
+const store = useStore()
 
 /* ── 5. Local state ─────────────────────────────────────────────────────
-   Hardcoded until the profile table exists. Swap for a store getter later —
-   the template won't need to change. */
-const headline = 'Singer, Actor, and Dancer trained at Illinois Wesleyan University.'
-
-// TODO(content): real bio from Ellie.
-const bio = [
+   Fallbacks, used only until Ellie fills the profile in through the admin.
+   Keeping them means the section is never blank mid-migration. */
+const FALLBACK_HEADLINE = 'Actor, singer, and mover based in the DMV.'
+const FALLBACK_BIO = [
   'PLACEHOLDER — Ellie is a musical theatre performer whose work spans ' +
     'contemporary musicals, classic book shows, and new-work development.',
-  'PLACEHOLDER — Recent credits include leading roles at regional houses ' +
-    'across the mid-Atlantic. She trained at [school] and studies voice with [teacher].',
 ]
 
+/* ── 6. Computed ────────────────────────────────────────────────────── */
+const headline = computed<string>(
+  () => store.state.profile.profile?.headline || FALLBACK_HEADLINE,
+)
+
+const bio = computed<string[]>(() => {
+  const paragraphs = store.getters['profile/bioParagraphs'] as string[]
+  return paragraphs.length ? paragraphs : FALLBACK_BIO
+})
+
 /*
-  Range leads because a G6 is genuinely uncommon and it's the first thing
-  casting filters on. Deliberately says "Legit Soprano" and never claims belt
-  — overclaiming a belt is how you end up in the wrong audition room.
-*/
-const stats = [
-  { label: 'Voice type', value: 'Legit Soprano' },
-  { label: 'Range', value: 'Up to G6' },             // TODO(content): full range once low note confirmed
-  { label: 'Height', value: "5'3\"" },
-  { label: 'Hair / Eyes', value: 'Brown / Blue' },   // TODO(content): confirm eyes
-  // TODO(content): Dance level + styles, then re-add the row
-  { label: 'Special skills', value: 'Improv' },      // TODO(content): rest of list
-]
+ * Rows are built from the profile, and any row with no value is dropped —
+ * so an unfilled field simply doesn't appear rather than rendering "TODO".
+ */
+const stats = computed(() => {
+  const p = store.state.profile.profile
+  const range = store.getters['profile/range'] as string
+  const height = p?.heightInches
+    ? `${Math.floor(p.heightInches / 12)}'${p.heightInches % 12}"`
+    : ''
+
+  return [
+    { label: 'Voice type', value: p?.voiceType ?? '' },
+    { label: 'Range', value: range },
+    { label: 'Height', value: height },
+  ].filter((row) => row.value !== '')
+})
+
+/* ── 8. Lifecycle ───────────────────────────────────────────────────── */
+onMounted(() => store.dispatch('profile/fetch'))
 </script>
 
 <style scoped>

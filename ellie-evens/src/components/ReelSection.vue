@@ -4,28 +4,55 @@
       <p class="eyebrow" v-reveal>Reel</p>
       <h2 class="section-title" v-reveal.mask>Watch</h2>
 
-      <!--
-        Rendered from an array, not a hardcoded embed — this is a `media` table
-        today in shape, tomorrow in fact. When the store lands, `items` becomes
-        a getter and nothing in this template changes.
-      -->
-      <div v-if="reels.length" class="reels">
-        <figure v-for="reel in reels" :key="reel.id" class="reel">
-          <div class="reel__frame">
-            <iframe
-              :src="reel.embedUrl"
-              :title="reel.title"
-              loading="lazy"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
-              allowfullscreen
+      <figure v-if="reels.length" class="reel">
+        <div class="reel__frame">
+          <!--
+            Only the current reel is mounted, and :key forces a remount on
+            change. Keeping all of them alive and merely hidden would leave a
+            paused-but-loaded player behind — and a video that was playing
+            would keep playing, audible, off screen.
+          -->
+          <iframe
+            v-if="active"
+            :key="active.id"
+            :src="active.embedUrl"
+            :title="active.title"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+            allowfullscreen
+          />
+
+          <template v-if="hasMultiple">
+            <button class="reel__arrow reel__arrow--prev" type="button" aria-label="Previous reel" @click="prev">
+              &lsaquo;
+            </button>
+            <button class="reel__arrow reel__arrow--next" type="button" aria-label="Next reel" @click="next">
+              &rsaquo;
+            </button>
+          </template>
+        </div>
+
+        <figcaption class="reel__caption">
+          <span class="reel__title">{{ active?.title }}</span>
+          <span v-if="active?.category" class="reel__tag">{{ active.category }}</span>
+        </figcaption>
+
+        <div v-if="hasMultiple" class="reel__nav">
+          <div class="reel__dots">
+            <button
+              v-for="(reel, index) in reels"
+              :key="reel.id"
+              type="button"
+              class="reel__dot"
+              :class="{ 'reel__dot--on': index === current }"
+              :aria-label="`Show ${reel.title}`"
+              :aria-current="index === current"
+              @click="goTo(index)"
             />
           </div>
-          <figcaption class="reel__caption">
-            <span class="reel__title">{{ reel.title }}</span>
-            <span v-if="reel.category" class="reel__tag">{{ reel.category }}</span>
-          </figcaption>
-        </figure>
-      </div>
+          <span class="reel__count">{{ current + 1 }} / {{ reels.length }}</span>
+        </div>
+      </figure>
 
       <!--
         No reel yet, and that's normal for a 2027 grad. Say something
@@ -44,37 +71,96 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
-import { useStore } from '@/store'          // your typed one, not vuex's
+/* ── 1. Imports ─────────────────────────────────────────────────────── */
+import { computed, onMounted } from 'vue'
+import { useStore } from '@/store'
+import { useCarousel } from '@/composables/useCarousel'
+import type { Reel } from '@/types'
 
-/* ── 5. Local state ─────────────────────────────────────────────────────
-   Empty until Ellie uploads through the admin. Shape matches the planned
-   `media` table: reels store an embed URL (Vimeo/YouTube host the video —
-   we never do), song cuts will store an S3 key. */
-
+/* ── 4. Store ───────────────────────────────────────────────────────── */
 const store = useStore()
 
+/* ── 6. Computed ────────────────────────────────────────────────────── */
+/*
+ * Typed as Reel[], not MediaItem[] — the getter already filtered by kind, and
+ * saying so lets the union do its job: `embedUrl` narrows to string, so the
+ * iframe src needs no null check. That narrowing is the whole reason the
+ * discriminated union exists.
+ */
+const reels = computed<Reel[]>(() => store.getters['media/reels'])
+
+/* Deliberately NO autoplay: advancing a video someone is watching would be
+   hostile. Same composable, different options. */
+const { current, hasMultiple, next, prev, goTo } = useCarousel(
+  computed(() => reels.value.length),
+)
+
+const active = computed<Reel | undefined>(() => reels.value[current.value])
+
+/* ── 8. Lifecycle ───────────────────────────────────────────────────── */
 onMounted(() => store.dispatch('media/fetch'))
-
-const reels = computed(() => store.getters['media/reels'])
-
 </script>
 
 <style scoped>
-.reels {
-  display: grid;
-  gap: var(--space-md);
-}
-
-.reel {
-  margin: 0;
-}
+.reel { margin: 0; }
 
 .reel__frame {
   position: relative;
   aspect-ratio: 16 / 9;
   background: var(--paper-deep);
   overflow: hidden;
+  box-shadow: 10px 10px 0 0 var(--teal);
+}
+
+.reel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--ink);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  color: var(--ink);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.reel__arrow:hover { background: var(--marigold); }
+.reel__arrow--prev { left: 0.6rem; }
+.reel__arrow--next { right: 0.6rem; }
+
+.reel__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-top: 0.75rem;
+}
+
+.reel__dots { display: flex; gap: 0.5rem; }
+
+.reel__dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.reel__dot--on { background: var(--marigold); }
+
+.reel__count {
+  font-size: var(--step--1);
+  color: var(--ink-mute);
+  font-variant-numeric: tabular-nums;
 }
 
 .reel__frame iframe {

@@ -28,6 +28,9 @@ Two-phase launch: **Phase 1** is the public site (no auth needed, ships first);
       admin login as part of the gift
 
 ### Infra (Ethan)
+- [ ] **Delete the 404 custom error response** on the distribution — it
+      rewrites API 404s to index.html with a 200 (403 rule still handles SPA
+      routing, since OAC makes S3 return 403 for missing keys)
 - [X] Buy domain (first — DNS + cert validation have latency)
 - [X] ACM cert **in us-east-1** (CloudFront requirement, regardless of stack region)
 - [X] Site bucket: Block Public Access ON, static website hosting OFF,
@@ -39,10 +42,8 @@ Two-phase launch: **Phase 1** is the public site (no auth needed, ships first);
 - [X] CloudFront: compress on; long TTL for `/assets/*`; no-cache for `index.html`
 - [X] Host Express (App Runner = low-friction) with env: `DATABASE_URL`
       (Neon **pooled** string), later `ASSET_BASE_URL`
-- [ ] `/api/*` behavior on the same distribution — caching disabled, all
-      methods + headers forwarded (single origin ⇒ no CORS in prod)
-- [ ] `app.set('trust proxy', 1)` behind CloudFront — rate limiter keys on
-      req.ip and sees only the proxy otherwise
+- [x] `/api/*` behavior — CachingDisabled + AllViewer origin request policy
+- [x] `trust proxy` via TRUST_PROXY_HOPS env var
 - [ ] Tighten or remove `cors()` for prod
 - [ ] `og:image` → absolute URL once domain exists (scrapers ignore relative)
 - [ ] Prod smoke test: deep-link refresh, contact form end to end, on a phone
@@ -63,6 +64,13 @@ Two-phase launch: **Phase 1** is the public site (no auth needed, ships first);
 - [ ] Curtain opening start animation (look at CodePen and Josh Comaneau)
 - [ ] Clean Git Repo for public
 ## Not blocking anything
+
+- **HTTPS to the EC2 origin.** CloudFront -> origin is currently `http-only`.
+  Edges are global, so that leg crosses the public internet unencrypted. Fine
+  while payloads are public credits; becomes a real gap once JWTs ride along
+  (a bearer token in plaintext is replayable write access). Fix: Let's Encrypt
+  cert via DNS-01 against Route 53 on `origin.ellieevens.com` -> Elastic IP,
+  then flip origin protocol to HTTPS. ~45 min. Deliberately deferred, not missed.
 
 - Git history purge (`git filter-repo`, 43 MB of images) — only if repo goes
   public, and ask Ellie before that
