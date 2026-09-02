@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import { pool } from '../db/pool'
+import { sendContactNotification } from '../services/email'
 
 const router = Router()
 
@@ -41,7 +42,17 @@ router.post('/', contactLimiter, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5)`,
       [String(name).slice(0, 200), email, String(message), req.ip ?? null, req.get('user-agent') ?? null],
     )
+
+    // Respond as soon as the row is safe. The notification is a side effect of
+    // a message we have already stored, so the visitor never waits on SES and
+    // never sees an error caused by it.
     res.status(204).end()
+
+    void sendContactNotification({
+      name: String(name).slice(0, 200),
+      email: String(email),
+      message: String(message),
+    })
   } catch (err) {
     console.error('[contact:create]', err)
     res.status(500).json({ message: 'Could not send your message' })
