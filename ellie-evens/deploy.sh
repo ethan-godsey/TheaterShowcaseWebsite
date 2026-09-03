@@ -11,6 +11,18 @@ DIST=E1DMC9GBT90JNF
 
 cd "$(dirname "$0")"
 
+# This runs on your laptop, not the server. The EC2 box has no frontend
+# toolchain, and its instance role deliberately cannot write the site bucket
+# or invalidate CloudFront — it exists to run the API.
+if [ ! -x node_modules/.bin/vite ]; then
+  echo "ERROR: frontend dependencies are missing here."
+  echo
+  echo "  This script builds and publishes the SITE, and runs on your laptop."
+  echo "  To deploy the API instead, SSH to the box and run:"
+  echo "      bash ~/app/server/deploy/redeploy.sh"
+  exit 1
+fi
+
 echo "==> Build (type-check runs in parallel; a type error aborts the deploy)"
 npm run build
 
