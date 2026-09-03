@@ -12,11 +12,21 @@ export interface Show {
 }
 
 export interface Photo {
-  /** S3 object key. Also the identity used for update/delete. */
+  id: string
+  /** S3 object key — the identity in the bucket. */
   key: string
+  /** Composed by the API at read time from the CDN base. */
   url: string
   caption: string
+  altText: string
   tags: string[]
+  sortOrder: number
+}
+
+/** Returned by POST /gallery/presign. */
+export interface PresignResponse {
+  key: string
+  uploadUrl: string
 }
 
 export interface ContactPayload {
@@ -79,5 +89,6 @@ export interface Profile {
   rangeHigh: string
   heightInches: number | null
   headshotKey: string | null
+  resumeKey: string | null
   updatedAt?: string
 }

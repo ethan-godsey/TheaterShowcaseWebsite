@@ -1,23 +1,19 @@
- 
 import type { Module } from 'vuex'
-import type { Photo } from '@/types'
+import { api } from '@/api/client'
+import type { Photo, PresignResponse } from '@/types'
 import type { RootState } from '../types'
 import {
   createRequests,
   requestMutations,
   requestGetters,
+  runRequest,
   type Requests,
 } from '../requestState'
 
-// You'll need these as you fill in the TODOs:
-//   import { api } from '@/api/client'
-//   import type { PresignResponse } from '@/types'
-//   import { runRequest } from '../requestState'
-
+/** Photos, backed by S3. Rows carry the key; the API composes the URL. */
 export interface GalleryState {
   items: Photo[]
   loadedAt: number | null
-  activeTag: string | null
   requests: Requests<'fetch' | 'upload' | 'remove'>
 }
 
@@ -27,37 +23,98 @@ const gallery: Module<GalleryState, RootState> = {
   state: () => ({
     items: [],
     loadedAt: null,
-    activeTag: null,
     requests: createRequests('fetch', 'upload', 'remove'),
   }),
 
   mutations: {
     ...requestMutations,
 
-    // TODO SET_ITEMS / ADD_ITEM / REMOVE_ITEM / SET_ACTIVE_TAG
-    //   REMOVE_ITEM takes a Photo['key'], not an index.
+    SET_ITEMS(state, items: Photo[]) {
+      state.items = items
+      state.loadedAt = Date.now()
+    },
+
+    ADD_ITEM(state, photo: Photo) {
+      state.items = [...state.items, photo]
+    },
+
+    REMOVE_ITEM(state, id: string) {
+      state.items = state.items.filter((p) => p.id !== id)
+    },
   },
 
   getters: {
     ...requestGetters,
 
-    // TODO visible(state): Photo[]  -> items matching activeTag, all when null
-    // TODO allTags(state): string[] -> every tag across items, deduped + sorted
-    // TODO isEmpty(state, getters): boolean -> fetch succeeded AND items empty
-    //   `getters` is the 2nd arg — that's how a getter reads another getter.
+    isEmpty: (state, getters) =>
+      getters.requestStatus('fetch') === 'success' && state.items.length === 0,
   },
 
   actions: {
-    // TODO fetch  -> api.get<Photo[]>('/gallery'), same skip-if-loaded shape
+    async fetch({ commit, state }, payload?: { force?: boolean }) {
+      if (!payload?.force && state.loadedAt !== null) return
 
-    // TODO upload({ commit }, payload: { file: File; caption?: string; tags?: string[] })
-    //   Two steps:
-    //     1. api.post<PresignResponse>('/gallery/presign', {...})
-    //     2. PUT the file DIRECTLY to uploadUrl with plain fetch(), not api.*
-    //   Why must the file not pass through the Express server? Two reasons.
+      await runRequest(commit, 'fetch', async () => {
+        const items = await api.get<Photo[]>('/gallery')
+        commit('SET_ITEMS', items)
+      })
+    },
 
-    // TODO remove({ commit }, key: string)
-    // TODO filterByTag({ commit }, tag: string | null)
+    /**
+     * Three steps, and the middle one bypasses our server entirely.
+     *   1. ask the API where to PUT
+     *   2. PUT the bytes straight to S3 with a plain fetch — using api.* here
+     *      would attach our Authorization header to an Amazon URL, which S3
+     *      rejects because it conflicts with the signature already in the URL
+     *   3. tell the API it worked, so the row gets created
+     */
+    async upload({ commit }, payload: { file: File; caption?: string; altText?: string }) {
+      return runRequest(commit, 'upload', async () => {
+        const { file, caption = '', altText = '' } = payload
+
+        const { key, uploadUrl } = await api.post<PresignResponse>('/gallery/presign', {
+          contentType: file.type,
+        })
+
+        const res = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        })
+        if (!res.ok) throw new Error(`Upload to S3 failed (${res.status})`)
+
+        const photo = await api.post<Photo>('/gallery', { key, caption, altText })
+        commit('ADD_ITEM', photo)
+        return photo
+      })
+    },
+
+    async remove({ commit }, id: string) {
+      return runRequest(commit, 'remove', async () => {
+        await api.delete<void>(`/gallery/${id}`)
+        commit('REMOVE_ITEM', id)
+        return true
+      })
+    },
+
+    /** Same pipeline, different folder. Used for the résumé PDF. */
+    async uploadDocument({ commit }, file: File) {
+      return runRequest(commit, 'upload', async () => {
+        const { key, uploadUrl } = await api.post<PresignResponse>('/gallery/presign', {
+          contentType: file.type,
+          folder: 'doc',
+        })
+
+        const res = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        })
+        if (!res.ok) throw new Error(`Upload to S3 failed (${res.status})`)
+
+        return key
+      })
+    },
   },
 }
 

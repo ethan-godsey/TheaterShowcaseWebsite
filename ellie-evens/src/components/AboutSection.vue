@@ -23,8 +23,9 @@
           </div>
         </dl>
 
-        <!-- TODO(content): drop a real PDF in /public and point this at it. -->
-        <a class="btn stats__cta" href="/ellie-evens-resume.pdf" download>
+        <!-- Hidden until a PDF exists: a download that returns the SPA's HTML
+             is worse than no button at all. -->
+        <a v-if="resumeUrl" class="btn stats__cta" :href="resumeUrl" target="_blank" rel="noopener">
           Download résumé
         </a>
       </aside>
@@ -75,6 +76,12 @@ const stats = computed(() => {
     { label: 'Range', value: range },
     { label: 'Height', value: height },
   ].filter((row) => row.value !== '')
+})
+
+/** Same-origin path: CloudFront routes /media/* to the gallery bucket. */
+const resumeUrl = computed<string | null>(() => {
+  const key = store.state.profile.profile?.resumeKey
+  return key ? `/${key}` : null
 })
 
 /* ── 8. Lifecycle ───────────────────────────────────────────────────── */

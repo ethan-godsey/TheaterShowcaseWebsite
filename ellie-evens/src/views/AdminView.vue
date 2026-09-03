@@ -20,16 +20,9 @@
 
       <ShowsPanel />
       <MediaPanel />
+      <PhotosPanel />
       <ProfilePanel />
 
-      <!-- TODO(next): photo upload. Needs a presign route + AWS SDK on the
-           server, an IAM role on the instance, and CORS on the media bucket. -->
-      <section class="admin__todo">
-        <h2 class="admin__h2">Coming next</h2>
-        <ul>
-          <li>Upload photos</li>
-        </ul>
-      </section>
     </main>
   </div>
 </template>
@@ -42,6 +35,7 @@ import SunMark from '@/components/SunMark.vue'
 import ShowsPanel from '@/components/admin/ShowsPanel.vue'
 import MediaPanel from '@/components/admin/MediaPanel.vue'
 import ProfilePanel from '@/components/admin/ProfilePanel.vue'
+import PhotosPanel from '@/components/admin/PhotosPanel.vue'
 
 const store = useStore()
 
