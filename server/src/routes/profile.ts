@@ -7,7 +7,7 @@ const router = Router()
 const PROFILE_COLUMNS = `bio, headline,
   voice_type AS "voiceType", range_low AS "rangeLow", range_high AS "rangeHigh",
   height_inches AS "heightInches", headshot_key AS "headshotKey",
-  updated_at AS "updatedAt"`
+  resume_key AS "resumeKey", updated_at AS "updatedAt"`
 
 router.get('/', async (_req, res) => {
   try {
@@ -20,7 +20,8 @@ router.get('/', async (_req, res) => {
 })
 
 router.put('/', requireAuth, async (req, res) => {
-  const { bio, headline, voiceType, rangeLow, rangeHigh, heightInches, headshotKey } = req.body ?? {}
+  const { bio, headline, voiceType, rangeLow, rangeHigh, heightInches, headshotKey, resumeKey } =
+    req.body ?? {}
 
   try {
     // COALESCE makes every field optional: send only what changed, the rest
@@ -34,11 +35,12 @@ router.put('/', requireAuth, async (req, res) => {
               range_high    = COALESCE($5, range_high),
               height_inches = COALESCE($6, height_inches),
               headshot_key  = COALESCE($7, headshot_key),
+              resume_key    = COALESCE($8, resume_key),
               updated_at    = now()
         WHERE id = TRUE
        RETURNING ${PROFILE_COLUMNS}`,
       [bio ?? null, headline ?? null, voiceType ?? null, rangeLow ?? null,
-       rangeHigh ?? null, heightInches ?? null, headshotKey ?? null],
+       rangeHigh ?? null, heightInches ?? null, headshotKey ?? null, resumeKey ?? null],
     )
     res.json(rows[0])
   } catch (err) {
