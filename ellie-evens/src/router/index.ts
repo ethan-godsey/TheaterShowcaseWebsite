@@ -7,7 +7,6 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView },
 
-    // Admin routes are lazy-loaded: visitors never download this code.
     {
       path: '/login',
       name: 'login',
@@ -27,12 +26,7 @@ const router = createRouter({
   ],
 })
 
-/*
- * This guard is UX, not security. It decides what to render; it protects
- * nothing. Anyone can open devtools and call the API directly — which is why
- * requireAuth on the server is the actual control. Never treat a route guard
- * as an access check.
- */
+// checks login status before routing
 router.beforeEach((to) => {
   if (!to.meta.requiresAuth) return true
   if (store.getters['auth/isAuthenticated']) return true

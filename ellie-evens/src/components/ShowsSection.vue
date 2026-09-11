@@ -19,11 +19,6 @@
           </ul>
         </div>
 
-        <!--
-          A table, not cards. Casting scans production / role / venue in
-          columns — that's how a paper résumé is laid out, and matching it
-          means they find what they're looking for without reading.
-        -->
         <div class="credits-scroll">
           <table class="credits">
             <caption class="visually-hidden">Selected theatre credits</caption>
@@ -55,20 +50,17 @@
 </template>
 
 <script setup lang="ts">
-/* ── 1. Imports ─────────────────────────────────────────────────────── */
+
 import { computed, onMounted } from 'vue'
 import { useStore } from '@/store'
 
-/* ── 4. Store ───────────────────────────────────────────────────────── */
 const store = useStore()
 
-/* ── 6. Computed ────────────────────────────────────────────────────── */
 const loading = computed(() => store.getters['shows/isLoading']('fetch'))
 const error = computed(() => store.getters['shows/requestError']('fetch'))
 const upcoming = computed(() => store.getters['shows/upcoming'])
 const past = computed(() => store.getters['shows/past'])
 
-/* ── 8. Lifecycle ───────────────────────────────────────────────────── */
 onMounted(() => {
   store.dispatch('shows/fetch')
 })
@@ -91,7 +83,7 @@ function formatDate(iso: string): string {
 </script>
 
 <style scoped>
-/* ── Upcoming ────────────────────────────────────────────────────────── */
+
 .upcoming {
   border-left: 4px solid var(--coral);
   padding-left: var(--space-md);

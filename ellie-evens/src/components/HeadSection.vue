@@ -52,20 +52,14 @@
 </template>
 
 <script setup lang="ts">
-/* ── 1. Imports ─────────────────────────────────────────────────────── */
+
 import { computed } from 'vue'
 import { useCarousel } from '@/composables/useCarousel'
 import headShot1 from '@/assets/opt/HeadShot1.jpg'
 import headShot2 from '@/assets/opt/HeadShot2.jpg'
 
-/* ── 5. Local state ─────────────────────────────────────────────────────
-   HeadShot1 first — it's the one Ellie picked, and the palette is built
-   from it. TODO: move to S3 + the gallery store once uploads exist. */
 const photos = [headShot1, headShot2]
 
-/* ── 6. Composables ─────────────────────────────────────────────────────
-   Index, wraparound, and the autoplay timer all live in useCarousel. The
-   crossfade markup below is what's specific to this component. */
 const { current, goTo } = useCarousel(
   computed(() => photos.length),
   { autoplayMs: 7000 },
@@ -102,7 +96,6 @@ const { current, goTo } = useCarousel(
   line-height: 0.95;
   letter-spacing: -0.025em;
   color: var(--ink);
-  /* A hair of bottom padding so descenders aren't clipped by the mask. */
   padding-bottom: 0.08em;
 }
 

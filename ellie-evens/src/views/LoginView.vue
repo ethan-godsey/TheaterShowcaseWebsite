@@ -33,7 +33,7 @@ const router = useRouter()
 const busy = ref(false)
 const error = computed<string | null>(() => store.getters['auth/requestError']('login'))
 
-// Already signed in? Don't make her click through a login she doesn't need.
+// Auto log in if signed in session
 onMounted(() => {
   if (store.getters['auth/isAuthenticated']) void router.replace('/admin')
 })

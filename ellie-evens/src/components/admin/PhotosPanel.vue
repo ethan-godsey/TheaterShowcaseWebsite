@@ -7,11 +7,6 @@
       </div>
 
       <div class="php__upload">
-        <!--
-          The real input is hidden and driven by a template ref: browsers give
-          you no styling control over file inputs, so the convention is to
-          label a button and forward the click.
-        -->
         <input
           ref="fileInput"
           type="file"
@@ -74,11 +69,7 @@ async function onFilesPicked(event: Event): Promise<void> {
   done.value = 0
   total.value = files.length
 
-  /*
-   * Sequential, not Promise.all. A t4g.micro signing thirty URLs at once is
-   * fine, but thirty simultaneous multi-megabyte PUTs will saturate a home
-   * connection and some will time out. One at a time is slower and finishes.
-   */
+  // one by one uploads of photos
   for (const file of files) {
     await store.dispatch('gallery/upload', { file, altText: 'Ellie Evens' })
     done.value += 1

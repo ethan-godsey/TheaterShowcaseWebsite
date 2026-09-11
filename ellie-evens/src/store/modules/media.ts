@@ -11,12 +11,7 @@ import {
   runRequest,
 } from '../requestState'
 
-// You'll need these as you fill in the TODOs:
-//   import { api } from '@/api/client'
-//   import type { PresignResponse } from '@/types'
-//   import { runRequest } from '../requestState'
 
-/** A media item being edited: no id yet when it's new. */
 export type MediaDraft = Omit<MediaItem, 'id'> & { id?: string }
 
 export interface MediaState {
@@ -61,10 +56,6 @@ const media: Module<MediaState, RootState> = {
 
       songs: (state) => state.items.filter((i) => i.kind == 'song'),
       reels: (state) => state.items.filter((i) => i.kind == 'reel')
-    // TODO visible(state): Photo[]  -> items matching activeTag, all when null
-    // TODO allTags(state): string[] -> every tag across items, deduped + sorted
-    // TODO isEmpty(state, getters): boolean -> fetch succeeded AND items empty
-    //   `getters` is the 2nd arg — that's how a getter reads another getter.
   },
 
   actions: {

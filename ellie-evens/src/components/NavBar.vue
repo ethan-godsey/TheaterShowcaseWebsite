@@ -8,26 +8,22 @@
       <a href="#shows">Shows</a>
       <a href="#contact">Contact</a>
     </div>
-    <!-- Reading-progress rule. Doubles as the nav's bottom border, so it
-         adds a moving element without adding a new one. -->
+
+    <!-- For animation -->
     <div class="progress" :style="{ transform: `scaleX(${progress})` }" aria-hidden="true" />
   </nav>
 </template>
 
 <script setup lang="ts">
-/* ── 1. Imports ─────────────────────────────────────────────────────── */
+
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
-/* ── 5. Local state ─────────────────────────────────────────────────── */
 const progress = ref(0)
 const scrolled = ref(false)
 
 let frame = 0
 
-/* ── 8. Lifecycle ───────────────────────────────────────────────────── */
 onMounted(() => {
-  // passive: true tells the browser we never preventDefault, so it can keep
-  // scrolling on the compositor instead of waiting on this handler.
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
@@ -37,15 +33,13 @@ onBeforeUnmount(() => {
   cancelAnimationFrame(frame)
 })
 
-/* ── 9. Handlers ────────────────────────────────────────────────────── */
 
-/* Scroll fires far more often than the screen repaints. Coalescing into one
-   rAF means we read layout once per frame instead of once per event. */
 function onScroll(): void {
   cancelAnimationFrame(frame)
   frame = requestAnimationFrame(measure)
 }
 
+// Calculation for only one call rather than many
 function measure(): void {
   const scrollable = document.documentElement.scrollHeight - window.innerHeight
   progress.value = scrollable > 0 ? Math.min(window.scrollY / scrollable, 1) : 0

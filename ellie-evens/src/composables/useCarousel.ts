@@ -18,11 +18,7 @@ export function useCarousel(
   const current = ref(0)
   const hasMultiple = computed(() => count.value > 1)
 
-  /*
-   * The collection can change size after mount (the reels arrive from the
-   * store), and it can shrink. Without this, deleting the last item leaves
-   * `current` pointing past the end and the template renders nothing.
-   */
+  // reset after end of carousel
   watch(count, (n) => {
     if (current.value >= n) current.value = 0
   })
@@ -32,8 +28,7 @@ export function useCarousel(
   }
 
   function prev(): void {
-    // + count before the modulo: JS's % returns negative for negative operands,
-    // so going back from 0 would otherwise land on -1.
+    // wrapper ensures no negative indexing
     if (count.value > 0) current.value = (current.value - 1 + count.value) % count.value
   }
 
@@ -41,7 +36,7 @@ export function useCarousel(
     if (index >= 0 && index < count.value) current.value = index
   }
 
-  /* ── Autoplay ─────────────────────────────────────────────────────── */
+  // autoplay timer: AI
   let timer: ReturnType<typeof setInterval> | null = null
 
   function stopTimer(): void {
@@ -49,11 +44,7 @@ export function useCarousel(
     timer = null
   }
 
-  /*
-   * Restarting on every change — including a manual click — is the whole
-   * point. A timer that keeps its original schedule will advance the slide
-   * moments after someone taps a dot, which reads as broken.
-   */
+  // restart on action
   function restartTimer(): void {
     stopTimer()
     if (!options.autoplayMs || !hasMultiple.value) return
@@ -65,8 +56,8 @@ export function useCarousel(
     watch(current, restartTimer)
     watch(hasMultiple, restartTimer)
     onMounted(restartTimer)
-    // Anything started on mount is torn down on unmount, or it outlives the
-    // component and keeps firing forever.
+    
+    // stop when component dies
     onBeforeUnmount(stopTimer)
   }
 

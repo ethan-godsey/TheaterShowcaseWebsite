@@ -69,10 +69,7 @@ const profile: Module<ProfileState, RootState> = {
       })
     },
 
-    /**
-     * The API COALESCEs every field, so a partial payload only changes what
-     * it names. Sending the whole object is fine and simpler.
-     */
+    // send whole object on partial edit
     async save({ commit }, value: Partial<Profile>) {
       return runRequest(commit, 'save', async () => {
         const saved = await api.put<Profile>('/profile', value)

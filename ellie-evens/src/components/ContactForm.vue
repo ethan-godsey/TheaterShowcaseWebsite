@@ -23,11 +23,7 @@
           <label for="contact-message">Message</label>
           <textarea id="contact-message" v-model.trim="message" rows="6" required />
         </div>
-
-        <!--
-          Honeypot. Real people never see this; bots fill every field they find.
-          aria-hidden + tabindex keeps it away from screen readers and keyboards.
-        -->
+        
         <div class="visually-hidden" aria-hidden="true">
           <label for="contact-company">Company</label>
           <input id="contact-company" v-model="company" type="text" tabindex="-1" autocomplete="off" />

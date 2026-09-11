@@ -23,8 +23,6 @@
           </div>
         </dl>
 
-        <!-- Hidden until a PDF exists: a download that returns the SPA's HTML
-             is worse than no button at all. -->
         <a v-if="resumeUrl" class="btn stats__cta" :href="resumeUrl" target="_blank" rel="noopener">
           Download résumé
         </a>
@@ -34,23 +32,20 @@
 </template>
 
 <script setup lang="ts">
-/* ── 1. Imports ─────────────────────────────────────────────────────── */
+
 import { computed, onMounted } from 'vue'
 import { useStore } from '@/store'
 
-/* ── 4. Store ───────────────────────────────────────────────────────── */
+// Store
 const store = useStore()
 
-/* ── 5. Local state ─────────────────────────────────────────────────────
-   Fallbacks, used only until Ellie fills the profile in through the admin.
-   Keeping them means the section is never blank mid-migration. */
-const FALLBACK_HEADLINE = 'Actor, singer, and mover based in the DMV.'
+const FALLBACK_HEADLINE = 'Actor, singer, and dancer trained at Illinois Wesleyan University.'
 const FALLBACK_BIO = [
-  'PLACEHOLDER — Ellie is a musical theatre performer whose work spans ' +
+  'Ellie is a musical theatre performer whose work spans ' +
     'contemporary musicals, classic book shows, and new-work development.',
 ]
 
-/* ── 6. Computed ────────────────────────────────────────────────────── */
+// Computeds
 const headline = computed<string>(
   () => store.state.profile.profile?.headline || FALLBACK_HEADLINE,
 )
@@ -60,10 +55,7 @@ const bio = computed<string[]>(() => {
   return paragraphs.length ? paragraphs : FALLBACK_BIO
 })
 
-/*
- * Rows are built from the profile, and any row with no value is dropped —
- * so an unfilled field simply doesn't appear rather than rendering "TODO".
- */
+
 const stats = computed(() => {
   const p = store.state.profile.profile
   const range = store.getters['profile/range'] as string
@@ -75,16 +67,17 @@ const stats = computed(() => {
     { label: 'Voice type', value: p?.voiceType ?? '' },
     { label: 'Range', value: range },
     { label: 'Height', value: height },
+  
+  // don't show empty row
   ].filter((row) => row.value !== '')
 })
 
-/** Same-origin path: CloudFront routes /media/* to the gallery bucket. */
 const resumeUrl = computed<string | null>(() => {
   const key = store.state.profile.profile?.resumeKey
   return key ? `/${key}` : null
 })
 
-/* ── 8. Lifecycle ───────────────────────────────────────────────────── */
+// Lifecycle of component
 onMounted(() => store.dispatch('profile/fetch'))
 </script>
 

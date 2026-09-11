@@ -35,7 +35,6 @@ const contact: Module<ContactState, RootState> = {
   getters: {
     ...requestGetters,
 
-    /** Drives the "thanks, I'll be in touch" panel. */
     wasSubmitted: (state) => state.lastSubmittedAt !== null,
   },
 

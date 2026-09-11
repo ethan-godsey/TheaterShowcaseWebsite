@@ -11,19 +11,7 @@ import {
   type Requests,
 } from '../requestState'
 
-/**
- * Admin session.
- *
- * The password never reaches this code — Cognito's hosted page collects it and
- * hands back tokens. This module only stores them and keeps the API client
- * supplied with the access token.
- *
- * KNOWN TRADEOFF: tokens live in sessionStorage, readable by any XSS on the
- * page. The hardened alternative is an httpOnly cookie set by our own API,
- * which costs a token-exchange proxy plus CSRF protection. Acceptable here
- * because the blast radius is "edit a public portfolio" and tokens expire
- * within the hour — but it is a real, deliberate compromise.
- */
+
 const STORAGE_KEY = 'ee.admin.session'
 
 export interface AuthState {
@@ -36,7 +24,6 @@ function readStored(): Session | null {
     const raw = sessionStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const session = JSON.parse(raw) as Session
-    // An expired token is the same as no token.
     if (!session.accessToken || session.expiresAt <= Date.now()) return null
     return session
   } catch {
@@ -114,16 +101,16 @@ const auth: Module<AuthState, RootState> = {
       })
     },
 
-    /**
-     * The token lives in three places: the API client, the store, and
-     * sessionStorage. Clearing fewer than all three leaves a ghost session.
-     * Then Cognito's own session must end too, or its login page will wave
-     * the next visitor straight back in without asking for a password.
-     */
     logout({ commit }) {
+      // clear token from API client
       setAuthToken(null)
+
+      // from session
       sessionStorage.removeItem(STORAGE_KEY)
+
+      // and from store
       commit('CLEAR_SESSION')
+
       window.location.assign(logoutUrl())
     },
   },

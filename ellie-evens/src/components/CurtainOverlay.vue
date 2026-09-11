@@ -23,13 +23,8 @@
  * ripples instead of sliding as a slab. On open the whole side translates
  * away AND scales to zero width, which reads as the curtain gathering into
  * the wings.
- *
- * Three rules keep it from becoming a nuisance:
- *   1. Once per tab session.
- *   2. Never under prefers-reduced-motion — not rendered at all.
- *   3. Removed from the DOM when done; a leftover full-screen fixed element
- *      would silently swallow every click on the page.
  */
+
 import { ref, onMounted } from 'vue'
 
 const SEEN_KEY = 'ee.curtain.seen'

@@ -19,8 +19,6 @@
       </label>
 
       <label class="field">
-        <!-- type="date" binds a plain YYYY-MM-DD string, which is exactly the
-             `date: string` contract the API and DB already speak. No parsing. -->
         <span>Date</span>
         <input v-model="date" type="date" required />
       </label>
@@ -57,10 +55,7 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-/*
- * Local copies, not direct edits to props. Props are readonly, and a form the
- * user can abandon must be able to throw its changes away.
- */
+// Local copies for throaway
 const title = ref('')
 const role = ref('')
 const venue = ref('')
@@ -88,7 +83,6 @@ const isValid = computed(
   () => title.value !== '' && role.value !== '' && venue.value !== '' && date.value !== '',
 )
 
-/** Drives the "unsaved changes" hint — cheap protection against a lost edit. */
 const dirty = computed(() => {
   if (!props.show) {
     return title.value !== '' || role.value !== '' || venue.value !== '' || date.value !== ''

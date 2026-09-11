@@ -30,9 +30,11 @@
           />
           <!-- Paste anything; we normalise it. A watch link in an iframe
                renders a blank box, which is the #1 way this goes wrong. -->
-          <small v-if="embedUrl" class="mf__hint">Embeds as <code>{{ embedUrl }}</code></small>
+          <small v-if="embedUrl" class="mf__hint">
+            <Kbd>Linked as</Kbd> 
+            <code>{{ embedUrl }}</code></small>
           <small v-else-if="rawUrl" class="mf__hint mf__hint--warn">
-            Not a Vimeo or YouTube link I recognise — it may not play.
+            Not a Vimeo or YouTube link, it may not play.
           </small>
         </label>
 

@@ -49,23 +49,18 @@
 </template>
 
 <script setup lang="ts">
-/* ── 1. Imports ─────────────────────────────────────────────────────── */
+
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from '@/store'
 import type { Photo } from '@/types'
 import GalleryLightbox from '@/components/GalleryLightbox.vue'
 
-/* ── 4. Store ───────────────────────────────────────────────────────── */
 const store = useStore()
 
-/* ── 5. Local state ─────────────────────────────────────────────────────
-   30 keeps a clean 6x5 block on desktop; the rest live behind the + tile. */
 const GRID_LIMIT = 30
-
 const lightboxOpen = ref(false)
 const startIndex = ref(0)
 
-/* ── 6. Computed ────────────────────────────────────────────────────── */
 const photos = computed<Photo[]>(() => store.state.gallery.items)
 const loading = computed<boolean>(() => store.getters['gallery/isLoading']('fetch'))
 const error = computed<string | null>(() => store.getters['gallery/requestError']('fetch'))
@@ -73,10 +68,8 @@ const error = computed<string | null>(() => store.getters['gallery/requestError'
 const visible = computed(() => photos.value.slice(0, GRID_LIMIT))
 const hidden = computed(() => Math.max(photos.value.length - GRID_LIMIT, 0))
 
-/* ── 8. Lifecycle ───────────────────────────────────────────────────── */
 onMounted(() => store.dispatch('gallery/fetch'))
 
-/* ── 9. Handlers ────────────────────────────────────────────────────── */
 function openAt(index: number): void {
   startIndex.value = index
   lightboxOpen.value = true

@@ -46,13 +46,8 @@
 </template>
 
 <script setup lang="ts">
-/*
- * Full-screen photo viewer, one at a time.
- *
- * Teleported to <body> so no ancestor's overflow, transform or stacking
- * context can clip it — a modal rendered inside a section with
- * `overflow: hidden` is a classic way to lose half of it.
- */
+
+/* TO-DO: Big image with gallery wheel below as breadcrumbs */
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import type { Photo } from '@/types'
 import { useCarousel } from '@/composables/useCarousel'
@@ -76,9 +71,9 @@ watch(
   async (isOpen) => {
     if (isOpen) {
       goTo(props.startIndex ?? 0)
+
       // Stop the page behind from scrolling under the overlay.
       document.body.style.overflow = 'hidden'
-      // Focus the dialog so arrow keys and Escape reach it immediately.
       await nextTick()
       dialog.value?.focus()
     } else {

@@ -55,11 +55,7 @@
 </template>
 
 <script setup lang="ts">
-/*
- * The container. It owns the store conversation and the "which row is being
- * edited" state; ShowForm stays ignorant of both. One component talks to the
- * store, the other is reusable anywhere.
- */
+
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from '@/store'
 import type { Show } from '@/types'
@@ -69,7 +65,8 @@ import ShowForm from './ShowForm.vue'
 const store = useStore()
 
 const editing = ref(false)
-/** null = adding new; a Show = editing that one. */
+
+// null = adding new; a Show = editing that one.
 const draft = ref<Show | null>(null)
 
 const shows = computed<Show[]>(() => store.state.shows.items)
@@ -92,8 +89,8 @@ function startEdit(show: Show): void {
 
 async function onSave(payload: ShowDraft): Promise<void> {
   const saved = await store.dispatch('shows/save', payload)
-  // runRequest returns undefined on failure; the error is already in state,
-  // so we simply keep the form open with the user's work intact.
+  
+  // keep the form open with the user's work intact.
   if (saved) editing.value = false
 }
 

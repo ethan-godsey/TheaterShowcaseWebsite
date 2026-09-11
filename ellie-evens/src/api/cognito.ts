@@ -1,12 +1,7 @@
 /**
  * Cognito OAuth 2.0 (Authorization Code + PKCE) — the browser half.
- *
- * Deliberately dependency-free: this is ~80 lines of Web Crypto and fetch,
- * and writing it once is worth more than a library that hides it.
- *
- * PKCE in one sentence: we send a HASH of a secret when we ask for a code,
- * and the secret itself only when we redeem it — so an authorization code
- * stolen from a URL, browser history, or a referer header is useless.
+ * Written by AI, BUT I have implemented this before with a cognito pool in
+ * production at internship with MCP
  */
 
 const DOMAIN = import.meta.env.VITE_COGNITO_DOMAIN

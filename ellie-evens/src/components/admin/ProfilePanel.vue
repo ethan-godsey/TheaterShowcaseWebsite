@@ -109,8 +109,7 @@ const saveError = computed<string | null>(() => store.getters['profile/requestEr
 
 onMounted(() => store.dispatch('profile/fetch'))
 
-// Re-seed the fields whenever the stored profile changes — on first load, and
-// again after a save so the form reflects exactly what the server kept.
+// Re-seed the fields on load and save
 watch(
   profile,
   (value) => {
@@ -128,7 +127,6 @@ const paragraphCount = computed(
   () => bio.value.split(/\n\s*\n/).filter((p) => p.trim()).length,
 )
 
-/** 63 -> 5'3" — so she can sanity-check the number she typed. */
 const heightLabel = computed(() => {
   const inches = heightInches.value
   if (!inches) return ''
@@ -147,12 +145,9 @@ const dirty = computed(() => {
   )
 })
 
-/**
- * Same presign pipeline as photos, with folder 'doc'. The returned key is
- * saved onto the profile, so the public site links straight at the CDN.
- */
 async function onResumePicked(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
+
   const file = input.files?.[0]
   if (!file) return
 

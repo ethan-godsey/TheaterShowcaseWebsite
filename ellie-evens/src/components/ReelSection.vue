@@ -54,14 +54,10 @@
         </div>
       </figure>
 
-      <!--
-        No reel yet, and that's normal for a 2027 grad. Say something
-        intentional rather than showing an empty box.
-      -->
       <div v-else class="reel__empty" v-reveal>
         <p class="reel__empty-lead">Footage is being cut now.</p>
         <p>
-          In the meantime, the fastest way to hear her is to ask — she'll send
+          In the meantime, the fastest way to hear her is to ask, she'll send
           cuts for whatever you're casting.
         </p>
         <a class="btn" href="#contact">Request material</a>
@@ -71,33 +67,22 @@
 </template>
 
 <script setup lang="ts">
-/* ── 1. Imports ─────────────────────────────────────────────────────── */
+
 import { computed, onMounted } from 'vue'
 import { useStore } from '@/store'
 import { useCarousel } from '@/composables/useCarousel'
 import type { Reel } from '@/types'
 
-/* ── 4. Store ───────────────────────────────────────────────────────── */
 const store = useStore()
 
-/* ── 6. Computed ────────────────────────────────────────────────────── */
-/*
- * Typed as Reel[], not MediaItem[] — the getter already filtered by kind, and
- * saying so lets the union do its job: `embedUrl` narrows to string, so the
- * iframe src needs no null check. That narrowing is the whole reason the
- * discriminated union exists.
- */
 const reels = computed<Reel[]>(() => store.getters['media/reels'])
 
-/* Deliberately NO autoplay: advancing a video someone is watching would be
-   hostile. Same composable, different options. */
 const { current, hasMultiple, next, prev, goTo } = useCarousel(
   computed(() => reels.value.length),
 )
 
 const active = computed<Reel | undefined>(() => reels.value[current.value])
 
-/* ── 8. Lifecycle ───────────────────────────────────────────────────── */
 onMounted(() => store.dispatch('media/fetch'))
 </script>
 

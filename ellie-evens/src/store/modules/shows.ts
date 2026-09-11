@@ -12,16 +12,11 @@ import {
   type Requests,
 } from '../requestState'
 
-// You'll need these as you fill in the TODOs:
-//   import { api } from '@/api/client'
-//   import { runRequest } from '../requestState'
 
-/** A show being edited: no id yet when it's new. */
 export type ShowDraft = Omit<Show, 'id'> & { id?: string }
 
 export interface ShowsState {
   items: Show[]
-  /** null = never fetched. Used to skip redundant requests. */
   loadedAt: number | null
   requests: Requests<'fetch' | 'save' | 'remove'>
 }
@@ -60,7 +55,7 @@ const shows: Module<ShowsState, RootState> = {
   getters: {
     ...requestGetters,
 
-    // TODO upcoming(state): Show[]  -> date >= now, soonest first
+    // Sort by date for shows after now
     upcoming(state: ShowsState) {
       const now = Date.now()
       return state.items
@@ -69,17 +64,13 @@ const shows: Module<ShowsState, RootState> = {
     },
 
 
-    // TODO past(state): Show[]      -> date < now, most recent first
-    //   Remember what .sort() does to the array you call it on.
+    // sort new to old
     past(state) {
       const now = Date.now()
       return state.items
         .filter((show) => new Date(show.date).getTime() < now)
-        // b - a, not a - b: most recent credit first.
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     },
-    // TODO byId(state)  -> returns a FUNCTION: (id: string) => Show | null
-    //   Its return type differs from the others. Work out why before writing it.
   },
 
     actions: {
@@ -92,11 +83,7 @@ const shows: Module<ShowsState, RootState> = {
       })
     },
  
-    /**
-     * Create when there's no id, update when there is.
-     * Commits the RESPONSE, never the argument — the server assigns the id
-     * and any defaults, so the row it returns is the only accurate one.
-     */
+   // post edit or new to DB and update display
     async save({ commit }, show: ShowDraft) {
       return runRequest(commit, 'save', async () => {
         const saved = show.id

@@ -16,8 +16,7 @@
 <script setup lang="ts">
 /*
  * The OAuth landing strip. Cognito redirects here with ?code=…; this view
- * trades it for tokens and gets out of the way. It is never linked to and
- * never bookmarked — which is exactly why it's a separate route from /admin.
+ * trades it for tokens and gets out of the way.
  */
 import { ref, onMounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
@@ -31,7 +30,7 @@ const router = useRouter()
 const error = ref<string | null>(null)
 
 onMounted(async () => {
-  // Cognito reports its own failures in the query string too.
+  // Cognito reports its own failures in the query string
   const denied = route.query.error_description ?? route.query.error
   if (typeof denied === 'string') {
     error.value = denied
@@ -50,8 +49,7 @@ onMounted(async () => {
     return
   }
 
-  // replace(), not push() — the code is spent, so this URL must never be
-  // reachable with the back button.
+  // replace so that you can't go back via back arrow
   await router.replace('/admin')
 })
 </script>

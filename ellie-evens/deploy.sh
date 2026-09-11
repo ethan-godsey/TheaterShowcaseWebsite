@@ -16,10 +16,6 @@ cd "$(dirname "$0")"
 # or invalidate CloudFront — it exists to run the API.
 if [ ! -x node_modules/.bin/vite ]; then
   echo "ERROR: frontend dependencies are missing here."
-  echo
-  echo "  This script builds and publishes the SITE, and runs on your laptop."
-  echo "  To deploy the API instead, SSH to the box and run:"
-  echo "      bash ~/app/server/deploy/redeploy.sh"
   exit 1
 fi
 
