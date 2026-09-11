@@ -3,9 +3,8 @@ import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2'
 /**
  * Contact-form notifications via SES.
  *
- * No credentials in code or env: the EC2 has an IAM instance profile, and the
- * SDK picks those up from the instance metadata service automatically. That's
- * the whole reason to run on EC2 with a role rather than storing an access key.
+ * EC2 has an IAM instance profile, and the
+ * SDK picks those up from the instance metadata service automatically
  */
 
 const REGION = process.env.AWS_REGION ?? 'us-east-1'
@@ -20,14 +19,6 @@ export interface ContactNotification {
   message: string
 }
 
-/**
- * Fire-and-report. Never throws.
- *
- * The message is already committed to contact_messages before this runs, so a
- * send failure must not fail the request — the visitor did nothing wrong and
- * the message isn't lost. This is exactly why the table exists: email delivery
- * is a notification, the row is the record.
- */
 export async function sendContactNotification(
   contact: ContactNotification,
 ): Promise<boolean> {
@@ -51,11 +42,7 @@ export async function sendContactNotification(
         FromEmailAddress: FROM,
         Destination: { ToAddresses: [TO] },
         /*
-         * ReplyTo carries the visitor's address; From stays on our own domain.
-         * Putting the visitor in From would fail SPF/DKIM — we can't
-         * authenticate mail as a domain we don't own — and land in spam or be
-         * rejected outright. Reply-To gets the behaviour you actually wanted:
-         * hit reply, it goes to them.
+         * ReplyTo carries the visitor's address; From stays on own domain.
          */
         ReplyToAddresses: [contact.email],
         Content: {

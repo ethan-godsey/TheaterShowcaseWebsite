@@ -29,7 +29,6 @@ app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 0))
 app.use(cors())
 app.use(express.json())
 
-// Liveness probe for the platform's health checks — cheap, no DB touch.
 app.get('/health', (_req, res) => {
   res.json({ ok: true })
 })

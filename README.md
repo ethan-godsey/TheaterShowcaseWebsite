@@ -1,2 +1,12 @@
 # MTShowcaseWebsite
-A website for Ellie Evens, musical theater student at IWU to showcase her portfolio. Done in Vue JS, AWS Lambda, and Node
+In a world where a CRUD app on GitHub says nothing about someone's programming ability anymore, I would like to try and explain what I built and learned here, and of course what AI (Claude Code) also did. I get that this website is a bit overengineered, but I wanted to learn more about the deployment process and how AWS (and broader cloud) services interact with eachother across an app.
+
+This project was built over the course of 3 weeks in about 55 hours of development time. Lots of the patterns here were chosen to replicate things I am learning at GROWMARK, where I intern. I did however choose a couple of different services and deployment choices that I'd like to highlight. First, I used CloudFront to host the app. Thinking about it, this is likely where the shell app is hosted for Growmark too, but when building and deploying their MFE architecture the developer only needs to execute a CodeBuild process.
+
+For deployment I chose to use a shell script written by Claude. I have some idea of how production CI/CD works internally with a bunch of steps from an internal utility library providing tagged releases, but I opted for SSHing into my EC2 instance to deploy the server and a seperate script on the front end which connects my bucket.
+
+Auth was strictly copied from what I have learned as an intern. To demonstrate an MCP flow that got to production, I had already built out the basics of OAuth 2.0 with PKCE, and let Claude do that side this time. The middleware and auth files demonstrate this, and actual login and JWT exchange happens through Cognito.
+
+Vue was a pretty good mix of me and Claude. The general structure of store to API call to DB is the flow we do use though, so I got some practice in with that. I try to keep in mind the overarching pattern of declarative programming as a whole since most places use React or Angular. For the API, Express was also chosen as something of familiarity. Same with TypeScript.
+
+The website is a WIP, and I am actively maintaining requests I get from Ellie and friends/family, so it is interesting to work on this over time. My aim with that is to keep these core concepts sharper. I would love to explain further how this application works under the hood!

@@ -54,8 +54,7 @@ router.put('/:id', requireAuth, async (req, res) => {
        RETURNING ${SHOW_COLUMNS}`,
       [title, role, venue, date, req.params.id],
     )
-    // UPDATE with no matching row isn't an error to Postgres — it's zero rows.
-    // Turning that into a 404 is the API's job.
+    // If no rows
     if (rows.length === 0) return res.status(404).json({ message: 'Show not found' })
     res.json(rows[0])
   } catch (err) {

@@ -1,23 +1,10 @@
 import type { RequestHandler } from 'express'
 import { CognitoJwtVerifier } from 'aws-jwt-verify'
 
-/**
- * Verifies a Cognito-issued JWT on every write route.
- *
- * Cognito authenticates (proves the user is Ellie); this authorizes (decides
- * the request may write). Cognito is never contacted per-request — the token
- * carries a signature we check against the pool's published public keys
- * (JWKS), which is what makes this stateless.
- *
- * Decoding a JWT is NOT verifying it: the payload is plain base64 and anyone
- * can forge one. Only the signature check proves Cognito minted it.
- */
 
 const userPoolId = process.env.COGNITO_USER_POOL_ID
 const clientId = process.env.COGNITO_CLIENT_ID
 
-// Fail at boot, not at the first request. A server that starts and then
-// rejects everything is far harder to diagnose than one that refuses to start.
 if (!userPoolId || !clientId) {
   throw new Error(
     'COGNITO_USER_POOL_ID and COGNITO_CLIENT_ID must be set (server/.env locally, /etc/ellie-api.env on the box)',

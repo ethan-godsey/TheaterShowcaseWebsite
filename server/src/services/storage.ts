@@ -33,25 +33,13 @@ export function isAllowedType(contentType: string): boolean {
 }
 
 /**
- * A random key, not the original filename.
- *
- * Filenames from a browser are untrusted input — they can carry path
- * separators, unicode tricks, or collide with an existing object and silently
- * overwrite it. A UUID sidesteps all of it, and the human-readable name lives
- * in the `caption` column where it belongs.
+ * A random key, not the original filename to avoid injection and bugs
  */
 export function buildKey(contentType: string, folder = 'gallery'): string {
   const ext = EXTENSIONS[contentType] ?? 'bin'
   return `media/${folder}/${randomUUID()}.${ext}`
 }
 
-/**
- * NOTE: a presigned PUT cannot enforce a size limit — the signature covers the
- * key, method and expiry, not the body. The protections here are that only an
- * authenticated admin can obtain a URL, and that it expires in five minutes.
- * If this ever opens to untrusted users, switch to a presigned POST, which
- * supports a content-length-range condition S3 actually enforces.
- */
 export async function createUploadUrl(
   key: string,
   contentType: string,
