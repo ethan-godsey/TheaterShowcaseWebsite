@@ -22,8 +22,11 @@
       <MediaPanel />
       <PhotosPanel />
       <ProfilePanel />
+      <PaperColorPanel />
 
     </main>
+
+    <ToastHost />
   </div>
 </template>
 
@@ -36,6 +39,8 @@ import ShowsPanel from '@/components/admin/ShowsPanel.vue'
 import MediaPanel from '@/components/admin/MediaPanel.vue'
 import ProfilePanel from '@/components/admin/ProfilePanel.vue'
 import PhotosPanel from '@/components/admin/PhotosPanel.vue'
+import ToastHost from '@/components/ui/ToastHost.vue'
+import PaperColorPanel from '@/components/admin/PaperColorPanel.vue'
 
 const store = useStore()
 

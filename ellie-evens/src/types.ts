@@ -90,5 +90,10 @@ export interface Profile {
   heightInches: number | null
   headshotKey: string | null
   resumeKey: string | null
+  /** '' = use the default in src/content/hero.ts. Plain text, newlines kept. */
+  heroLede: string
+  heroBilling: string
+  /** '#rrggbb', or '' for the default cream. See src/theme/paper.ts. */
+  paperColor: string
   updatedAt?: string
 }

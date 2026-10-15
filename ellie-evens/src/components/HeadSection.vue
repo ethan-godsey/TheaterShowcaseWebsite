@@ -4,15 +4,22 @@
       <div class="hero__type">
         <h1 class="hero__name" v-reveal.mask>Ellie Evens</h1>
 
-        <p class="hero__billing" v-reveal="{ delay: 250 }">
-          Soprano <span class="hero__dot">&middot;</span>
-          Improv <span class="hero__dot">&middot;</span>
-          Acting
-        </p>
+        <!--
+          Editable from the admin. Held invisible (space still reserved, so
+          nothing below jumps) until the profile has answered, so a visitor
+          never sees the default wording swap to Ellie's.
+        -->
+        <div class="hero__copy" :class="{ 'hero__copy--pending': !profileReady }">
+          <p class="hero__billing" v-reveal="{ delay: 250 }">
+            <!-- Any '·' she types keeps the marigold dot styling. Text is
+                 interpolated, never v-html: what she types can't become markup. -->
+            <template v-for="(part, i) in billingParts" :key="i">
+              <span v-if="i > 0" class="hero__dot">&middot;</span>{{ part }}
+            </template>
+          </p>
 
-        <p class="hero__lede" v-reveal="{ delay: 350 }">
-          Musical Theater Student studying at Illinois Wesleyan, from Lincolnwood, IL
-        </p>
+          <p class="hero__lede" v-reveal="{ delay: 350 }">{{ lede }}</p>
+        </div>
 
         <div class="hero__actions" v-reveal="{ delay: 450 }">
           <a class="btn" href="#shows">See credits</a>
@@ -53,17 +60,60 @@
 
 <script setup lang="ts">
 
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useStore } from '@/store'
 import { useCarousel } from '@/composables/useCarousel'
+import { HERO_DEFAULTS } from '@/content/hero'
+import type { Photo } from '@/types'
 import headShot1 from '@/assets/opt/HeadShot1.jpg'
 import headShot2 from '@/assets/opt/HeadShot2.jpg'
 
-const photos = [headShot1, headShot2]
+const store = useStore()
+
+/* ── Headshots ─────────────────────────────────────────────────────
+   Gallery photos Ellie has marked "Use in hero", in gallery order. The two
+   bundled photos are the fallback — when none are marked, or the gallery
+   can't load. While the gallery is still loading, show nothing (the frame's
+   own background), rather than flashing the fallback and swapping it out. */
+const FALLBACK = [headShot1, headShot2]
+
+const galleryReady = computed<boolean>(
+  () =>
+    store.state.gallery.loadedAt !== null ||
+    store.getters['gallery/requestError']('fetch') !== null,
+)
+const marked = computed<Photo[]>(() => store.getters['gallery/headshots'])
+
+const photos = computed<string[]>(() => {
+  if (!galleryReady.value) return []
+  return marked.value.length ? marked.value.map((p) => p.url) : FALLBACK
+})
 
 const { current, goTo } = useCarousel(
-  computed(() => photos.length),
+  computed(() => photos.value.length),
   { autoplayMs: 7000 },
 )
+
+/* ── Billing and lede ──────────────────────────────────────────── */
+const profileReady = computed<boolean>(
+  () =>
+    store.state.profile.loadedAt !== null ||
+    store.getters['profile/requestError']('fetch') !== null,
+)
+
+const billing = computed(
+  () => store.state.profile.profile?.heroBilling?.trim() || HERO_DEFAULTS.billing,
+)
+const billingParts = computed(() => billing.value.split('·'))
+const lede = computed(
+  () => store.state.profile.profile?.heroLede?.trim() || HERO_DEFAULTS.lede,
+)
+
+onMounted(() => {
+  // Both no-op if another section already loaded them.
+  store.dispatch('gallery/fetch')
+  store.dispatch('profile/fetch')
+})
 </script>
 
 <style scoped>
@@ -99,7 +149,13 @@ const { current, goTo } = useCarousel(
   padding-bottom: 0.08em;
 }
 
+/* Pending: invisible but still taking up its space. opacity on the wrapper,
+   not the <p>s, because v-reveal animates the <p>s' own opacity. */
+.hero__copy { transition: opacity 0.4s ease; }
+.hero__copy--pending { opacity: 0; }
+
 .hero__billing {
+  white-space: pre-line; /* her line breaks show; runs of spaces still collapse */
   margin-top: var(--space-sm);
   font-size: var(--step--1);
   letter-spacing: 0.2em;
@@ -111,6 +167,7 @@ const { current, goTo } = useCarousel(
 .hero__dot { color: var(--marigold); }
 
 .hero__lede {
+  white-space: pre-line;
   margin-top: var(--space-sm);
   max-width: 34ch;
   font-size: var(--step-1);
@@ -149,6 +206,18 @@ const { current, goTo } = useCarousel(
   overflow: hidden;
   /* Offset ink border — the plate reads as printed onto the page. */
   box-shadow: 12px 12px 0 0 var(--teal);
+}
+
+/* Engines without aspect-ratio (Chrome/Edge < 88, Safari < 15) drop the
+   declaration, and since every child here is absolutely positioned the frame
+   has no in-flow content to give it height — it collapses to zero and the
+   headshots disappear while the dots below still render. The padding ratio
+   reproduces 3:4 for those engines only. */
+@supports not (aspect-ratio: 3 / 4) {
+  .hero__frame {
+    height: 0;
+    padding-bottom: 133.3333%; /* 4 / 3 */
+  }
 }
 
 .hero__img {

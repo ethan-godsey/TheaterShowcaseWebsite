@@ -11,6 +11,7 @@ import {
   runRequest,
   type Requests,
 } from '../requestState'
+import { reorderItems } from '../reorder'
 
 
 export type ShowDraft = Omit<Show, 'id'> & { id?: string }
@@ -18,7 +19,7 @@ export type ShowDraft = Omit<Show, 'id'> & { id?: string }
 export interface ShowsState {
   items: Show[]
   loadedAt: number | null
-  requests: Requests<'fetch' | 'save' | 'remove'>
+  requests: Requests<'fetch' | 'save' | 'remove' | 'reorder'>
 }
 
 const shows: Module<ShowsState, RootState> = {
@@ -27,7 +28,7 @@ const shows: Module<ShowsState, RootState> = {
   state: () => ({
     items: [],
     loadedAt: null,
-    requests: createRequests('fetch', 'save', 'remove'),
+    requests: createRequests('fetch', 'save', 'remove', 'reorder'),
   }),
 
   mutations: {
@@ -50,6 +51,12 @@ const shows: Module<ShowsState, RootState> = {
     REMOVE_ITEM(state, id: string) {
       state.items = state.items.filter((s) => s.id !== id)
     },
+
+    /** Replace the list wholesale without touching loadedAt — used for the
+     *  optimistic reorder and for rolling it back. */
+    REPLACE_ITEMS(state, items: Show[]) {
+      state.items = items
+    },
   },
 
   getters: {
@@ -64,12 +71,13 @@ const shows: Module<ShowsState, RootState> = {
     },
 
 
-    // sort new to old
+    // Ellie's own order, as dragged in the admin — strongest credits first,
+    // the way a résumé reads. items already arrive in that order from the
+    // API, so this only filters. Don't re-sort here: a date sort would
+    // silently undo every reorder she makes.
     past(state) {
       const now = Date.now()
-      return state.items
-        .filter((show) => new Date(show.date).getTime() < now)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      return state.items.filter((show) => new Date(show.date).getTime() < now)
     },
   },
 
@@ -92,6 +100,11 @@ const shows: Module<ShowsState, RootState> = {
         commit('UPSERT_ITEM', saved)
         return saved
       })
+    },
+
+    /** Save a new order. See store/reorder.ts. */
+    reorder(ctx, ids: string[]): Promise<boolean> {
+      return reorderItems(ctx, '/shows/order', ids)
     },
 
     async remove({ commit }, id: string) {

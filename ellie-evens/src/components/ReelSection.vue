@@ -97,6 +97,15 @@ onMounted(() => store.dispatch('media/fetch'))
   box-shadow: 10px 10px 0 0 var(--teal);
 }
 
+/* Same collapse as the hero plate — the iframe is absolutely positioned, so
+   without aspect-ratio this frame has no height at all. */
+@supports not (aspect-ratio: 16 / 9) {
+  .reel__frame {
+    height: 0;
+    padding-bottom: 56.25%; /* 9 / 16 */
+  }
+}
+
 .reel__arrow {
   position: absolute;
   top: 50%;

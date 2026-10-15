@@ -1,1 +1,4 @@
 .DS_Store
+schema.sql
+/scripts
+node_modules

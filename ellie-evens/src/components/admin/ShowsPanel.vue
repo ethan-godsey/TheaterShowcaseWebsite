@@ -22,10 +22,16 @@
 
       <p v-if="saveError" class="state state--error">{{ saveError }}</p>
 
-      <div class="sp__scroll">
+      <p v-if="shows.length > 1" class="sp__hint">
+        Drag the <span aria-hidden="true">⠿</span> handle to reorder. The site lists past
+        credits in this order; upcoming shows stay in date order.
+      </p>
+
+      <div class="sp__scroll" :class="{ 'sp__scroll--saving': reordering }" :aria-busy="reordering">
         <table class="sp__table">
           <thead>
             <tr>
+              <th scope="col"><span class="visually-hidden">Reorder</span></th>
               <th scope="col">Production</th>
               <th scope="col">Role</th>
               <th scope="col">Venue</th>
@@ -33,8 +39,11 @@
               <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
           </thead>
-          <tbody>
+          <tbody ref="rows">
             <tr v-for="show in shows" :key="show.id">
+              <td class="sp__grip">
+                <span class="sp__handle" :title="`Drag to move ${show.title}`" aria-hidden="true">⠿</span>
+              </td>
               <td class="sp__strong">{{ show.title }}</td>
               <td class="sp__role">{{ show.role }}</td>
               <td>{{ show.venue }}</td>
@@ -45,7 +54,7 @@
               </td>
             </tr>
             <tr v-if="!shows.length">
-              <td colspan="5" class="sp__empty">No credits yet. Add the first one.</td>
+              <td colspan="6" class="sp__empty">No credits yet. Add the first one.</td>
             </tr>
           </tbody>
         </table>
@@ -56,8 +65,10 @@
 
 <script setup lang="ts">
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, useTemplateRef } from 'vue'
 import { useStore } from '@/store'
+import { useToast } from '@/composables/useToast'
+import { useSortable, moveId } from '@/composables/useSortable'
 import type { Show } from '@/types'
 import type { ShowDraft } from '@/store/modules/shows'
 import ShowForm from './ShowForm.vue'
@@ -93,6 +104,35 @@ async function onSave(payload: ShowDraft): Promise<void> {
   // keep the form open with the user's work intact.
   if (saved) editing.value = false
 }
+
+/* ── Drag to reorder ───────────────────────────────────────────────
+   Rows drag by the handle only, not anywhere on the row: the cells hold text
+   she may want to select, and Edit/Delete must stay plain buttons. A handle
+   also means touch drags can start immediately (no hold delay) without
+   breaking scrolling, because a swipe elsewhere on the row still scrolls. */
+const toast = useToast()
+const rows = useTemplateRef<HTMLTableSectionElement>('rows')
+const reordering = ref(false)
+
+useSortable(
+  rows,
+  async (from, to) => {
+    reordering.value = true
+    const ids = moveId(shows.value.map((s) => s.id), from, to)
+    const ok = await store.dispatch('shows/reorder', ids)
+    reordering.value = false
+
+    if (!ok) {
+      const reason = store.getters['shows/requestError']('reorder') as string | null
+      toast.error(`Couldn't save the new order${reason ? `: ${reason}` : '.'}`)
+    }
+  },
+  {
+    handle: '.sp__handle',
+    ghostClass: 'sp__row--ghost',
+    chosenClass: 'sp__row--chosen',
+  },
+)
 
 async function onDelete(show: Show): Promise<void> {
   if (!window.confirm(`Delete "${show.title}"? This can't be undone.`)) return
@@ -136,6 +176,26 @@ async function onDelete(show: Show): Promise<void> {
 .sp__empty { color: var(--ink-mute); text-align: center; padding: var(--space-md) !important; }
 
 .sp__row-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+.sp__hint { font-size: var(--step--1); color: var(--ink-mute); }
+
+.sp__grip { width: 1%; padding-right: 0 !important; }
+
+.sp__handle {
+  display: inline-block;
+  padding: 0.15rem 0.3rem;
+  color: var(--ink-mute);
+  cursor: grab;
+  touch-action: none; /* the handle is for dragging, never scrolling */
+  user-select: none;
+}
+
+.sp__handle:hover { color: var(--teal); }
+
+.sp__row--ghost td { opacity: 0.35; background: var(--paper-deep); }
+.sp__row--chosen .sp__handle { cursor: grabbing; }
+
+.sp__scroll--saving { opacity: 0.7; transition: opacity 0.2s ease; }
 
 .sp__row-actions button {
   background: none;

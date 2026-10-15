@@ -75,5 +75,10 @@ CREATE TABLE IF NOT EXISTS profile (
   range_high       TEXT NOT NULL DEFAULT '',
   height_inches    INT,
   headshot_key     TEXT,
+  resume_key       TEXT,
+  -- NULL or '' means "use the site's built-in default" for these three.
+  hero_lede        TEXT,
+  hero_billing     TEXT,
+  paper_color      TEXT,   -- '#rrggbb', limits in src/lib/paper-color.ts
   updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );

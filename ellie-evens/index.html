@@ -17,6 +17,28 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..800&family=Karla:wght@300..800&display=swap">
     <title>Ellie Evens · Musical Theatre Performer</title>
+    <!--
+      Apply Ellie's saved paper colour BEFORE first paint. The app script is a
+      module (deferred), so by the time it runs the page has already painted
+      the default cream; this runs inline, first. Reads the palette cached by
+      src/theme/paper.ts (key must match PAPER_CACHE_KEY). First-time visitors
+      have no cache and see cream until the API answers.
+    -->
+    <script>
+      try {
+        var p = JSON.parse(localStorage.getItem('ellie:paper:v1') || 'null');
+        if (p) {
+          for (var k in p) {
+            if (/^--[a-z-]+$/.test(k) && /^#[0-9a-f]{6}$/i.test(p[k])) {
+              document.documentElement.style.setProperty(k, p[k]);
+            }
+          }
+          if (p['--paper']) {
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', p['--paper']);
+          }
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="app"></div>

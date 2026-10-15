@@ -57,6 +57,13 @@ const profile: Module<ProfileState, RootState> = {
       if (high) return `Up to ${high}`
       return ''
     },
+
+    /** Same-origin path to the résumé PDF, or null until one is uploaded.
+     *  Shared by About and Credits so the two buttons can't drift apart. */
+    resumeUrl: (state): string | null => {
+      const key = state.profile?.resumeKey
+      return key ? `/${key}` : null
+    },
   },
 
   actions: {

@@ -45,6 +45,14 @@
           Credits coming soon.
         </p>
       </template>
+
+      <!-- Outside the v-if chain above: the résumé comes from the profile, not
+           the shows fetch, so a failed credits load shouldn't hide it. -->
+      <p v-if="resumeUrl" class="resume" v-reveal>
+        <a class="btn" :href="resumeUrl" download="Ellie-Evens-Resume.pdf">
+          Download résumé
+        </a>
+      </p>
     </div>
   </section>
 </template>
@@ -60,9 +68,13 @@ const loading = computed(() => store.getters['shows/isLoading']('fetch'))
 const error = computed(() => store.getters['shows/requestError']('fetch'))
 const upcoming = computed(() => store.getters['shows/upcoming'])
 const past = computed(() => store.getters['shows/past'])
+const resumeUrl = computed<string | null>(() => store.getters['profile/resumeUrl'])
 
 onMounted(() => {
   store.dispatch('shows/fetch')
+  // About fetches the profile too; the action no-ops once it's loaded. This
+  // section still asks for itself rather than relying on About being mounted.
+  store.dispatch('profile/fetch')
 })
 
 /* ── 9. Handlers ────────────────────────────────────────────────────── */
@@ -116,6 +128,12 @@ function formatDate(iso: string): string {
 
 /* ── Credits table ───────────────────────────────────────────────────── */
 .credits-scroll { overflow-x: auto; }
+
+.resume {
+  margin-top: var(--space-md);
+}
+
+.resume .btn { text-decoration: none; }
 
 .credits {
   width: 100%;

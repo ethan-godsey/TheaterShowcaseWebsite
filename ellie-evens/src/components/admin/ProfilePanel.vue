@@ -48,6 +48,36 @@
         </label>
       </div>
 
+      <fieldset class="pf__hero">
+        <legend class="pf__legend">Hero — the top of the site</legend>
+
+        <label class="field">
+          <span>Billing</span>
+          <textarea
+            v-model="heroBilling"
+            rows="1"
+            :maxlength="HERO_MAX"
+            :placeholder="HERO_DEFAULTS.billing"
+          ></textarea>
+          <small class="pf__hint">
+            Type a · between items and it gets the marigold dot. On a Mac: Option-8.
+          </small>
+        </label>
+
+        <label class="field">
+          <span>Lede</span>
+          <textarea
+            v-model="heroLede"
+            rows="2"
+            :maxlength="HERO_MAX"
+            :placeholder="HERO_DEFAULTS.lede"
+          ></textarea>
+          <small class="pf__hint">
+            Line breaks are kept. Leave either box empty to use the wording shown in grey.
+          </small>
+        </label>
+      </fieldset>
+
       <div class="pf__resume">
         <span class="pf__resume-label">Résumé PDF</span>
         <p v-if="resumeKey" class="pf__resume-current">
@@ -86,6 +116,10 @@
 import { ref, computed, watch, onMounted, useTemplateRef } from 'vue'
 import { useStore } from '@/store'
 import type { Profile } from '@/types'
+import { HERO_DEFAULTS } from '@/content/hero'
+
+// Matches MAX_HERO_TEXT in server/src/routes/profile.ts.
+const HERO_MAX = 300
 
 const store = useStore()
 
@@ -95,6 +129,8 @@ const voiceType = ref('')
 const rangeLow = ref('')
 const rangeHigh = ref('')
 const heightInches = ref<number | null>(null)
+const heroBilling = ref('')
+const heroLede = ref('')
 const justSaved = ref(false)
 
 const resumeInput = useTemplateRef<HTMLInputElement>('resumeInput')
@@ -109,16 +145,26 @@ const saveError = computed<string | null>(() => store.getters['profile/requestEr
 
 onMounted(() => store.dispatch('profile/fetch'))
 
-// Re-seed the fields on load and save
+/* Re-seed the form when the saved profile changes (load, save, résumé upload,
+   a colour save in the panel below). Per field, and only fields she hasn't
+   touched: a field still equal to the PREVIOUS saved value takes the new one;
+   a field she's edited keeps her edit. Re-seeding everything would silently
+   wipe unsaved bio edits whenever anything else on the profile was saved. */
+function reseed<T>(field: { value: T }, next: T, prev: T | undefined): void {
+  if (prev === undefined || field.value === prev) field.value = next
+}
+
 watch(
   profile,
-  (value) => {
-    headline.value = value?.headline ?? ''
-    bio.value = value?.bio ?? ''
-    voiceType.value = value?.voiceType ?? ''
-    rangeLow.value = value?.rangeLow ?? ''
-    rangeHigh.value = value?.rangeHigh ?? ''
-    heightInches.value = value?.heightInches ?? null
+  (value, old) => {
+    reseed(headline, value?.headline ?? '', old === undefined ? undefined : old?.headline ?? '')
+    reseed(bio, value?.bio ?? '', old === undefined ? undefined : old?.bio ?? '')
+    reseed(voiceType, value?.voiceType ?? '', old === undefined ? undefined : old?.voiceType ?? '')
+    reseed(rangeLow, value?.rangeLow ?? '', old === undefined ? undefined : old?.rangeLow ?? '')
+    reseed(rangeHigh, value?.rangeHigh ?? '', old === undefined ? undefined : old?.rangeHigh ?? '')
+    reseed(heightInches, value?.heightInches ?? null, old === undefined ? undefined : old?.heightInches ?? null)
+    reseed(heroBilling, value?.heroBilling ?? '', old === undefined ? undefined : old?.heroBilling ?? '')
+    reseed(heroLede, value?.heroLede ?? '', old === undefined ? undefined : old?.heroLede ?? '')
   },
   { immediate: true },
 )
@@ -141,7 +187,11 @@ const dirty = computed(() => {
     voiceType.value !== (p?.voiceType ?? '') ||
     rangeLow.value !== (p?.rangeLow ?? '') ||
     rangeHigh.value !== (p?.rangeHigh ?? '') ||
-    heightInches.value !== (p?.heightInches ?? null)
+    heightInches.value !== (p?.heightInches ?? null) ||
+    // Trimmed, matching what onSubmit sends, or a trailing space would read
+    // as "unsaved" forever after a successful save.
+    heroBilling.value.trim() !== (p?.heroBilling ?? '') ||
+    heroLede.value.trim() !== (p?.heroLede ?? '')
   )
 })
 
@@ -167,6 +217,10 @@ async function onSubmit(): Promise<void> {
     rangeLow: rangeLow.value,
     rangeHigh: rangeHigh.value,
     heightInches: heightInches.value,
+    // Trimmed: whitespace-only would otherwise save as "custom" text that
+    // renders blank. '' means "use the default".
+    heroBilling: heroBilling.value.trim(),
+    heroLede: heroLede.value.trim(),
   })
   if (saved) {
     justSaved.value = true
@@ -193,6 +247,9 @@ async function onSubmit(): Promise<void> {
 .field input:focus, .field textarea:focus { border-color: var(--teal); }
 
 .pf__hint { font-size: 0.8rem; color: var(--ink-mute); }
+
+.pf__hero { border: 0; border-top: 1px solid var(--rule); padding: var(--space-sm) 0 0; margin: 0; display: grid; gap: var(--space-sm); }
+.pf__legend { padding: 0; font-family: var(--font-display); font-size: var(--step-1); color: var(--ink); }
 .pf__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
 .pf .btn { cursor: pointer; justify-self: start; }
 .pf__dirty { font-size: var(--step--1); color: var(--coral); }

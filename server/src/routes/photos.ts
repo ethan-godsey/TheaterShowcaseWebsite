@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { pool } from '../db/pool'
+import { isIdList, isUuid, reorder } from '../db/reorder'
 import { requireAuth } from '../middleware/require-auth'
 import { buildKey, createUploadUrl, deleteObject, isAllowedType } from '../services/storage'
 
@@ -71,9 +72,13 @@ router.post('/', requireAuth, async (req, res) => {
   }
 
   try {
+    // New photos go to the END of her arranged order. The column default is
+    // 0, which would sort a fresh upload to the front of the gallery while
+    // the admin list (which appends) shows it last.
     const { rows } = await pool.query<PhotoRow>(
-      `INSERT INTO photos (s3_key, caption, alt_text, tags)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO photos (s3_key, caption, alt_text, tags, sort_order)
+       VALUES ($1, $2, $3, $4,
+               (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM photos))
        RETURNING ${COLUMNS}`,
       [key, caption ?? '', altText ?? '', Array.isArray(tags) ? tags : []],
     )
@@ -81,6 +86,61 @@ router.post('/', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('[photos:create]', err)
     res.status(500).json({ message: 'Could not save the photo' })
+  }
+})
+
+/**
+ * Reorder the whole gallery from the complete list of ids in their new order.
+ * See db/reorder.ts for why it's the full list rather than "move X to N".
+ */
+router.put('/order', requireAuth, async (req, res) => {
+  const { ids } = req.body ?? {}
+  if (!isIdList(ids)) {
+    return res.status(400).json({ message: 'Expected a list of unique photo ids' })
+  }
+
+  try {
+    const result = await reorder('photos', ids)
+    if (result === 'stale') {
+      return res
+        .status(409)
+        .json({ message: 'The gallery changed since this page loaded. Refreshing.' })
+    }
+    res.status(204).end()
+  } catch (err) {
+    console.error('[photos:reorder]', err)
+    res.status(500).json({ message: 'Could not save the new order' })
+  }
+})
+
+/**
+ * Mark or unmark a photo as a hero headshot. Takes a boolean rather than a
+ * tags array, so the client can't write arbitrary tags — 'headshot' is the
+ * only one anything reads. The hero shows tagged photos in gallery order.
+ */
+router.put('/:id/headshot', requireAuth, async (req, res) => {
+  const { headshot } = req.body ?? {}
+  if (!isUuid(req.params.id) || typeof headshot !== 'boolean') {
+    return res.status(400).json({ message: 'Expected a photo id and { headshot: boolean }' })
+  }
+
+  try {
+    const { rows } = await pool.query<PhotoRow>(
+      `UPDATE photos
+          SET tags = CASE
+                WHEN $1 AND NOT ('headshot' = ANY(tags)) THEN array_append(tags, 'headshot')
+                WHEN NOT $1 THEN array_remove(tags, 'headshot')
+                ELSE tags
+              END
+        WHERE id = $2
+       RETURNING ${COLUMNS}`,
+      [headshot, req.params.id],
+    )
+    if (rows.length === 0) return res.status(404).json({ message: 'Photo not found' })
+    res.json(withUrl(rows[0]!))
+  } catch (err) {
+    console.error('[photos:headshot]', err)
+    res.status(500).json({ message: 'Could not update the photo' })
   }
 })
 

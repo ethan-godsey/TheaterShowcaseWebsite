@@ -17,9 +17,15 @@ import type { Directive } from 'vue'
 
 interface RevealEl extends HTMLElement {
   _revealObserver?: IntersectionObserver
+  _revealFallback?: ReturnType<typeof setTimeout>
 }
 
 const STAGGER_STEP_MS = 70
+
+/* The wipe hides content until the observer fires, so anything that stops it
+   firing hides real content for good. After this long, reveal regardless and
+   lose the animation — a missing entrance beats a missing headshot. */
+const FAILSAFE_MS = 3000
 
 export const reveal: Directive<RevealEl, { delay?: number } | undefined> = {
   mounted(el, binding) {
@@ -61,23 +67,35 @@ export const reveal: Directive<RevealEl, { delay?: number } | undefined> = {
     const delay = binding.value?.delay
     if (delay) el.style.transitionDelay = `${delay}ms`
 
+    const done = () => {
+      el.classList.add('is-revealed')
+      observer.disconnect()
+      if (el._revealFallback) clearTimeout(el._revealFallback)
+      el._revealFallback = undefined
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue
-          entry.target.classList.add('is-revealed')
-          observer.unobserve(entry.target) // fire once
+          done() // fire once
         }
       },
-      { rootMargin: '0px 0px -10% 0px', threshold: 0.08 },
+      // Threshold 0 matters as much as 0.08: a zero-area element has ratio 0
+      // and would never cross an 8% threshold, so it would stay clipped
+      // forever — invisible for a reason that has nothing to do with scroll.
+      { rootMargin: '0px 0px -10% 0px', threshold: [0, 0.08] },
     )
 
     observer.observe(el)
     el._revealObserver = observer
+    el._revealFallback = setTimeout(done, FAILSAFE_MS)
   },
 
   unmounted(el) {
     el._revealObserver?.disconnect()
     delete el._revealObserver
+    if (el._revealFallback) clearTimeout(el._revealFallback)
+    delete el._revealFallback
   },
 }

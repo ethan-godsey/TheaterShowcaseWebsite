@@ -1,6 +1,7 @@
 import type { Module } from 'vuex'
 import { api } from '@/api/client'
 import type { Photo, PresignResponse } from '@/types'
+import { HEADSHOT_TAG } from '@/content/hero'
 import type { RootState } from '../types'
 import {
   createRequests,
@@ -9,12 +10,13 @@ import {
   runRequest,
   type Requests,
 } from '../requestState'
+import { reorderItems } from '../reorder'
 
 /** Photos, backed by S3. Rows carry the key; the API composes the URL. */
 export interface GalleryState {
   items: Photo[]
   loadedAt: number | null
-  requests: Requests<'fetch' | 'upload' | 'remove'>
+  requests: Requests<'fetch' | 'upload' | 'remove' | 'reorder' | 'headshot'>
 }
 
 const gallery: Module<GalleryState, RootState> = {
@@ -23,7 +25,7 @@ const gallery: Module<GalleryState, RootState> = {
   state: () => ({
     items: [],
     loadedAt: null,
-    requests: createRequests('fetch', 'upload', 'remove'),
+    requests: createRequests('fetch', 'upload', 'remove', 'reorder', 'headshot'),
   }),
 
   mutations: {
@@ -41,6 +43,16 @@ const gallery: Module<GalleryState, RootState> = {
     REMOVE_ITEM(state, id: string) {
       state.items = state.items.filter((p) => p.id !== id)
     },
+
+    /** Replace the list wholesale without touching loadedAt — used for the
+     *  optimistic reorder and for rolling it back. */
+    REPLACE_ITEMS(state, items: Photo[]) {
+      state.items = items
+    },
+
+    REPLACE_ITEM(state, photo: Photo) {
+      state.items = state.items.map((p) => (p.id === photo.id ? photo : p))
+    },
   },
 
   getters: {
@@ -48,6 +60,10 @@ const gallery: Module<GalleryState, RootState> = {
 
     isEmpty: (state, getters) =>
       getters.requestStatus('fetch') === 'success' && state.items.length === 0,
+
+    /** Photos marked for the hero, in gallery order. */
+    headshots: (state): Photo[] =>
+      state.items.filter((p) => p.tags?.includes(HEADSHOT_TAG)),
   },
 
   actions: {
@@ -86,6 +102,22 @@ const gallery: Module<GalleryState, RootState> = {
         const photo = await api.post<Photo>('/gallery', { key, caption, altText })
         commit('ADD_ITEM', photo)
         return photo
+      })
+    },
+
+    /** Save a new order. See store/reorder.ts. */
+    reorder(ctx, ids: string[]): Promise<boolean> {
+      return reorderItems(ctx, '/gallery/order', ids)
+    },
+
+    /** Mark or unmark a photo as a hero headshot. Resolves true on success. */
+    async setHeadshot({ commit }, payload: { id: string; headshot: boolean }) {
+      return runRequest(commit, 'headshot', async () => {
+        const photo = await api.put<Photo>(`/gallery/${payload.id}/headshot`, {
+          headshot: payload.headshot,
+        })
+        commit('REPLACE_ITEM', photo)
+        return true
       })
     },
 
